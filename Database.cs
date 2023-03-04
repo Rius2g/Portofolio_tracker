@@ -44,32 +44,21 @@ namespace Database //do all the setup and functions for database
             DateTime time = DateTime.Now;
 
             //fetch the price of the security
-            if (security.Type == 2) //stock
-            {
-                price = await API.Get.GetStockPrice(security.Ticker);
-            }
-            else if (security.Type == 1) //crypto
+            if (security.Type == 1) //crypto
             {
                 price = await API.Get.GetCryptoPrice(security.Ticker);
                 string priceString = price.ToString();
                 price = Convert.ToDouble(priceString);
             }
-            // else if (security.Type == 3) //bond
-            // {
-            //     price = API.Get.GetBondPrice(security.Ticker);
-            // }
-            // else if (security.Type == 4) //etf
-            // {
-            //     price = API.Get.GetETFPrice(security.Ticker);
-            // }
-            // else if (security.Type == 6) //index fund
-            // {
-            //     price = API.Get.GetIndexFundPrice(security.Ticker);
-            // }
-            // else if (security.Type == 5) //mutual fund
-            // {
-            //     price = API.Get.GetMutualFundPrice(security.Ticker);
-            // }
+            else if (security.Type == 2 || security.Type == 3 || security.Type == 6) //stock, etf, index fund
+            {
+                price = await API.Get.GetStockPrice(security.Ticker);
+            }
+          
+            else if (security.Type == 5) //mutual fund
+            {
+                price = await API.Get.GetMutualFundPrice(security.Ticker);
+            }
 
             // Open the connection:
             connection.Open();

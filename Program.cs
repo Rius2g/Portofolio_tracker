@@ -69,7 +69,7 @@ namespace ConsoleApplication
             //Holdings
             //The program does the rest
             Console.Clear();
-            Console.WriteLine("Enter the type of security you want to add\n 1. Crypto\n 2. Stock\n 3. Bond\n 4. ETF\n 5. Mutual Fund\n 6. Index Fund\n");
+            Console.WriteLine("Enter the type of security you want to add\n 1. Crypto\n 2. Stock\n 3. ETF\n 4. Mutual Fund\n 5. Index Fund\n");
             int type = Convert.ToInt32(Console.ReadLine());
             if (type < 1 || type > 6)
             {

@@ -38,8 +38,30 @@ namespace API
         {
             throw new Exception($"Failed to fetch crypto price for {ticker} with status code {response.StatusCode}.");
         }
-    }
         }
+
+        public static async Task<Double> GetMutualFundPrice(string ticker)
+        {
+            HttpClient client = new HttpClient();
+
+            string url = $"https://finance.yahoo.com/quote/{ticker}";
+            HttpResponseMessage response = await client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            string responseBody = await response.Content.ReadAsStringAsync();
+            int index = responseBody.IndexOf("data-reactid=\"50\">") + 18;
+            string priceString = responseBody.Substring(index, 10);
+            priceString = priceString.Replace(",", "");
+            if (double.TryParse(priceString, out double price))
+            {
+                return price;
+            }
+            else
+            {
+                throw new Exception("Failed to parse mutual fund price.");
+            }
+        }
+        
+    }
 
 
 }
