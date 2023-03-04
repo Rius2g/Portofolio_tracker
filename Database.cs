@@ -9,6 +9,7 @@ namespace Database //do all the setup and functions for database
     public class Database
     {
         private API.Get api;
+        public string lastFetch;
         public Database()
         {
             api = new API.Get();
@@ -64,7 +65,7 @@ namespace Database //do all the setup and functions for database
             connection.Open();
             // Insert some data:
             var insertCommand = connection.CreateCommand();
-            insertCommand.CommandText = "INSERT INTO Securities (Ticker, Price, Quantity, Date, Time, Type) VALUES ('" + security.Ticker + "', " + price.ToString().Replace(",", ".") + ", " + security.Quantity + ", '" + date.ToString("yyyy-MM-dd") + "', '" + time.ToString("HH:mm:ss") + "', '" + security.Type + "')";
+            insertCommand.CommandText = "INSERT INTO Securities (Ticker, Price, Quantity, Date, Time, Type) VALUES ('" + security.Ticker + "', " + price.ToString().Replace(",", ".") + ", " + security.Quantity + ", '" + date.ToString("yyyy-MM-dd") + "', '" + time.ToString("HH:mm") + "', '" + security.Type + "')";
             insertCommand.ExecuteNonQuery();
 
             // Close the connection:
@@ -110,15 +111,13 @@ namespace Database //do all the setup and functions for database
         }
 
 
-        public async void NewPrice( DateTime date) //function to update the price of all securities if date is different from last update
+        public async void NewPrice() //function to update the price of all securities if date is different from last update
         {
-
             //first fetch the entire list and see if any are outdated 
             List<Modules.Security> securities = GetSecurities();
+            DateTime date = DateTime.Now;
             foreach (Modules.Security security in securities)
             {
-                if (security.Date != date)
-                {
                     //fetch the price of the security
                     double price = 0;
                     if (security.Type == 1) //crypto
@@ -131,10 +130,8 @@ namespace Database //do all the setup and functions for database
                     price = await api.GetStockPrice(security.Ticker);
                     else if (security.Type == 5) //mutual fund
                     price = api.GetMutualFundPrice(security.Ticker).Result;
-
                     //update the price
                     UpdateSecurity(security.Ticker, (float)price, security.Quantity, date, DateTime.Now, security.Type.ToString());
-                }
             }
             // Create a new database connection:
         }
@@ -161,6 +158,10 @@ namespace Database //do all the setup and functions for database
 
         public List<Modules.DisplayedSecurity> GetDisplayedSecurities()
         {
+           DateTime time= DateTime.Now;
+
+           lastFetch = time.ToString("yyyy-MM-dd");
+
             // Create a new database connection:
             var connectionStringBuilder = new SqliteConnectionStringBuilder();
             connectionStringBuilder.DataSource = "Holdings.db";
