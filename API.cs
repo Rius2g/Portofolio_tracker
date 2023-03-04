@@ -6,37 +6,37 @@ namespace API
 {
     class Get
     {
-        public int GetStockPrice(string ticker)
+        static public int GetStockPrice(string ticker)
         {
             //API to get the price of stock price
             return 0;
         }
 
-        public int GetCryptoPrice(string ticker)
+       static public int GetCryptoPrice(string ticker)
         {
             //API to get the price of crypto price
             return 0;
         }
 
-        public int GetBondPrice(string ticker)
+        static public int GetBondPrice(string ticker)
         {
             //API to get the price of bond price
             return 0;
         }
 
-        public int GetETFPrice(string ticker)
+        static public int GetETFPrice(string ticker)
         {
             //API to get the price of ETF price
             return 0;
         }
 
-        public int GetIndexFundPrice(string ticker)
+        static public int GetIndexFundPrice(string ticker)
         {
             //API to get the price of index fund price
             return 0;
         }
 
-        public int GetMutualFundPrice(string ticker)
+        static public int GetMutualFundPrice(string ticker)
         {
             //API to get the price of mutual fund price
             return 0;

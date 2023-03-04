@@ -26,12 +26,41 @@ namespace Database //do all the setup and functions for database
             connection.Close();
         }
 
-        public void AddSecurity(string name, string ticker, float price, int quantity, DateTime date, DateTime time, string type)
+        public void AddSecurity(string name, string ticker, int quantity, int type)
         {
             // Create a new database connection:
             var connectionStringBuilder = new SqliteConnectionStringBuilder();
             connectionStringBuilder.DataSource = "Holdings.db";
             var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
+            int price = 0;
+            DateTime date = DateTime.Now;
+            DateTime time = DateTime.Now;
+
+            //fetch the price of the security
+            if (type == 2) //stock
+            {
+                price = API.Get.GetStockPrice(ticker);
+            }
+            else if (type == 1) //crypto
+            {
+                price = API.Get.GetCryptoPrice(ticker);
+            }
+            else if (type == 3) //bond
+            {
+                price = API.Get.GetBondPrice(ticker);
+            }
+            else if (type == 4) //etf
+            {
+                price = API.Get.GetETFPrice(ticker);
+            }
+            else if (type == 6) //index fund
+            {
+                price = API.Get.GetIndexFundPrice(ticker);
+            }
+            else if (type == 5) //mutual fund
+            {
+                price = API.Get.GetMutualFundPrice(ticker);
+            }
 
             // Open the connection:
             connection.Open();
