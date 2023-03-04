@@ -9,7 +9,7 @@ namespace API
    public class Get
     {
         static public string API_KEY = "E6TUK887BIOZOONH";
-        public static async Task<double> GetStockPrice(string ticker)
+        public async Task<double> GetStockPrice(string ticker)
         {
             var apiUrl = $"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={ticker}&apikey={API_KEY}";
 
@@ -22,7 +22,7 @@ namespace API
             //API to get the price of stock price
         }
 
-        public static async Task<Double> GetCryptoPrice(string ticker)
+        public async Task<Double> GetCryptoPrice(string ticker)
         {
             HttpClient client = new HttpClient();
             string url = $"https://api.coinbase.com/v2/prices/{ticker}-USD/spot";
@@ -40,7 +40,7 @@ namespace API
         }
         }
 
-        public static async Task<Double> GetMutualFundPrice(string ticker)
+        public async Task<Double> GetMutualFundPrice(string ticker)
         {
             HttpClient client = new HttpClient();
 

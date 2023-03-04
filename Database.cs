@@ -46,18 +46,18 @@ namespace Database //do all the setup and functions for database
             //fetch the price of the security
             if (security.Type == 1) //crypto
             {
-                price = await API.Get.GetCryptoPrice(security.Ticker);
+                price = await api.GetCryptoPrice(security.Ticker);
                 string priceString = price.ToString();
                 price = Convert.ToDouble(priceString);
             }
             else if (security.Type == 2 || security.Type == 3 || security.Type == 6) //stock, etf, index fund
             {
-                price = await API.Get.GetStockPrice(security.Ticker);
+                price = await api.GetStockPrice(security.Ticker);
             }
           
             else if (security.Type == 5) //mutual fund
             {
-                price = await API.Get.GetMutualFundPrice(security.Ticker);
+                price = await api.GetMutualFundPrice(security.Ticker);
             }
 
             // Open the connection:
@@ -109,7 +109,8 @@ namespace Database //do all the setup and functions for database
             connection.Close();
         }
 
-        public void NewPrice( DateTime date) //function to update the price of all securities if date is different from last update
+
+        public async void NewPrice( DateTime date) //function to update the price of all securities if date is different from last update
         {
 
             //first fetch the entire list and see if any are outdated 
@@ -122,14 +123,14 @@ namespace Database //do all the setup and functions for database
                     double price = 0;
                     if (security.Type == 1) //crypto
                     {
-                        price = API.Get.GetCryptoPrice(security.Ticker).Result;
+                        price = await api.GetCryptoPrice(security.Ticker);
                         string priceString = price.ToString();
                         price = Convert.ToDouble(priceString);
                     }
                     else if (security.Type == 2 || security.Type == 3 || security.Type == 6) //stock, etf, index fund
-                    price = API.Get.GetStockPrice(security.Ticker).Result;
+                    price = await api.GetStockPrice(security.Ticker);
                     else if (security.Type == 5) //mutual fund
-                    price = API.Get.GetMutualFundPrice(security.Ticker).Result;
+                    price = api.GetMutualFundPrice(security.Ticker).Result;
 
                     //update the price
                     UpdateSecurity(security.Ticker, (float)price, security.Quantity, date, DateTime.Now, security.Type.ToString());
