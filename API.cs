@@ -6,11 +6,6 @@ namespace API
 {
     class Get
     {
-        public string Name { get; set; }
-        public string Ticker { get; set; }
-
-        public string Type { get; set; }
-
         public int GetStockPrice(string ticker)
         {
             //API to get the price of stock price
@@ -47,7 +42,7 @@ namespace API
             return 0;
         }
 
-        
+
 
     }
 }

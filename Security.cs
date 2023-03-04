@@ -13,16 +13,13 @@ namespace Modules
         public int Quantity { get; set; }
         public DateTime Date { get; set; }
         public DateTime Time { get; set; }
-        public string Type { get; set; }
+        public int Type { get; set; }
 
-        public Security(string name, string ticker, float price, int quantity, DateTime date, DateTime time, string type)
+        public Security(string name, string ticker, int quantity, int type)
         {
             Name = name;
             Ticker = ticker;
-            Price = price;
             Quantity = quantity;
-            Date = date;
-            Time = time;
             Type = type;
         }
 

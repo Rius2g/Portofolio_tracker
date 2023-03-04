@@ -35,18 +35,7 @@ namespace ConsoleApplication
             }
         }
     }
-
-    class security
-    {
-        public int type;
-        public string ticker;
-
-        public string name;
-
-        public int holdings;
-    }
              
-
     public class Functions
     {
 
@@ -63,7 +52,6 @@ namespace ConsoleApplication
         }
         public void AddSecurity()
         { //adds a securiy to the database/portofolio
-            security sec = new security();
             Console.WriteLine("Adding security");
 
             //type (crpyto, stock, bond, etc.)
@@ -78,11 +66,23 @@ namespace ConsoleApplication
             }
             else
             {
+                Console.WriteLine("Enter the name");
+                string? name =  Console.ReadLine();
+                if (string.IsNullOrEmpty(name))
+                {
+                    throw new Exception("Invalid name");
+                }
                 Console.WriteLine("Enter the ticker");
-                sec.ticker = Console.ReadLine();
-                sec.type = type;
+                string? ticker =  Console.ReadLine();
+
+                if(string.IsNullOrEmpty(ticker))
+                {
+                    throw new Exception("Invalid ticker");
+                }
+
                 Console.WriteLine("Enter the holdings");
-                sec.holdings = Convert.ToInt32(Console.ReadLine());
+                int holdings = Convert.ToInt32(Console.ReadLine());
+                Modules.Security security = new Modules.Security(name, ticker, holdings, type);
                 
             }
         }
@@ -110,13 +110,28 @@ namespace ConsoleApplication
             return total;
         }
 
+        public int calculateChanges()
+        { //calculates the changes of the portofolio
+            int changes = 0;
+            //get securities from database
+            //if date of fetch is not todays date, fetch new data
+            //calculate changes in % and $
+            //return changes
+            return changes;
+        }
+
         public void DisplayPortofolio()
         { //displays the portofolio
-
+            //start a timer if the timer is > 4 hours, refresh the data
+            //get the total value of the portofolio
+            
             bool display = true;
+            Console.Clear();
+
+            //clear the console first and then display the portofolio
             while (display)
             {
-                Console.WriteLine("Display portofolio");
+                Console.Write("\r{0}%   ", 100);
             }
         }
     }

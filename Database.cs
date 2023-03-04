@@ -8,7 +8,7 @@ namespace Database //do all the setup and functions for database
 
     public class Database
     {
-        public static void Main(string[] args)
+        public static void Init(string[] args)
         {
             // Create a new database connection:
             var connectionStringBuilder = new SqliteConnectionStringBuilder();
@@ -102,7 +102,7 @@ namespace Database //do all the setup and functions for database
                 List<Modules.Security> securities = new List<Modules.Security>();
                 while (reader.Read())
                 {
-                    Modules.Security security = new Modules.Security(reader.GetString(0), reader.GetString(1), reader.GetFloat(2), reader.GetInt32(3), reader.GetDateTime(4), reader.GetDateTime(5), reader.GetString(6));
+                    Modules.Security security = new Modules.Security(reader.GetString(0), reader.GetString(1), reader.GetInt32(3), reader.GetInt16(6));
                     securities.Add(security);
                 }
                 return securities;
