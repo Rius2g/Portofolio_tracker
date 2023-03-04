@@ -8,9 +8,11 @@ namespace ConsoleApplication
     {
         static void Main()
         {
-        Console.WriteLine("Press any key to continue...");
+        Console.WriteLine("Welcome!\n\n");
 
         Functions f = new Functions();
+        while(true)
+        {
         int option = f.Menu();
         switch (option)
             {
@@ -27,12 +29,16 @@ namespace ConsoleApplication
                 f.DisplayPortofolio();
                 break;
             case 5:
+                f.PurgeDatabase();
+                break;
+            case 6:
                 f.Exit();
                 return;
             default:
                 Console.WriteLine("Invalid option");
                 break;
             }
+        }
         }
     }
              
@@ -43,12 +49,14 @@ namespace ConsoleApplication
 
         public int Menu()
         {
+            Console.Clear();
             Console.WriteLine("Select your wanted option");
             Console.WriteLine("1. Add security");
             Console.WriteLine("2. Update security");
             Console.WriteLine("3. Remove security");
             Console.WriteLine("4. Display portofolio");
-            Console.WriteLine("5. Exit");
+            Console.WriteLine("5. Purge database");
+            Console.WriteLine("6. Exit");
             int option = Convert.ToInt32(Console.ReadLine());
             return option;
         }
@@ -101,6 +109,12 @@ namespace ConsoleApplication
         public void Exit()
         { //exits the program
             Console.WriteLine("Exiting program");
+        }
+
+        public void PurgeDatabase()
+        { //purges the database
+            Console.WriteLine("Purging database");
+            db.PurgeDatabase();
         }
 
         public int calculateTotal()

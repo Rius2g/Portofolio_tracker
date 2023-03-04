@@ -8,22 +8,27 @@ namespace Database //do all the setup and functions for database
 
     public class Database
     {
-        public static void Init(string[] args)
+        public Database()
         {
             // Create a new database connection:
-            var connectionStringBuilder = new SqliteConnectionStringBuilder();
-            connectionStringBuilder.DataSource = "Holdings.db";
-            var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
+            createDB();
+        }
 
-            // Open the connection:
-            connection.Open();
+        public void createDB()
+        {
+            // Create a new database connection:
+            using (var connection = new SqliteConnection("Data Source=Holdings.db"))
+            {
+                connection.Open();
 
-            // Create a table:
-            var createTable = connection.CreateCommand();
-            createTable.CommandText = "CREATE TABLE IF NOT EXISTS Securities (Name VARCHAR(255), Ticker VARCHAR(255), Price FLOAT, Quantity INT, Date DATE, Time TIME, Type VARCHAR(255)))";
-            createTable.ExecuteNonQuery();
-            // Close the connection:
-            connection.Close();
+                // Create a new command:
+                var createTableCommand = connection.CreateCommand();
+                createTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS Securities (Name TEXT, Ticker TEXT, Price INTEGER, Quantity INTEGER, Date TEXT, Time TEXT, Type INTEGER)";
+                createTableCommand.ExecuteNonQuery();
+
+                // Close the connection:
+                connection.Close();
+            }
         }
 
         public void AddSecurity(Modules.Security security)
@@ -113,6 +118,25 @@ namespace Database //do all the setup and functions for database
             connection.Close();
         }
 
+
+        public void PurgeDatabase()
+        {
+            // Create a new database connection:
+            var connectionStringBuilder = new SqliteConnectionStringBuilder();
+            connectionStringBuilder.DataSource = "Holdings.db";
+            var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
+
+            // Open the connection:
+            connection.Open();
+
+            // Delete some data:
+            var deleteCommand = connection.CreateCommand();
+            deleteCommand.CommandText = "DELETE FROM Securities";
+            deleteCommand.ExecuteNonQuery();
+
+            // Close the connection:
+            connection.Close();
+        }
 
         public List<Modules.Security> GetSecurities()
         {
