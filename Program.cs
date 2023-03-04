@@ -74,8 +74,7 @@ namespace ConsoleApplication
             int type = Convert.ToInt32(Console.ReadLine());
             if (type < 1 || type > 6)
             {
-                Console.WriteLine("Invalid option");
-                return;
+                throw new Exception("Invalid type");
             }
             else
             {
@@ -84,6 +83,7 @@ namespace ConsoleApplication
                 sec.type = type;
                 Console.WriteLine("Enter the holdings");
                 sec.holdings = Convert.ToInt32(Console.ReadLine());
+                
             }
         }
 
@@ -100,8 +100,19 @@ namespace ConsoleApplication
             Console.WriteLine("Exiting program");
         }
 
+        public int calculateTotal()
+        { //calculates the total value of the portofolio
+            int total = 0;
+            //get securities from database
+            //if date of fetch is not todays date, fetch new data
+            //calculate total value
+            //return total
+            return total;
+        }
+
         public void DisplayPortofolio()
         { //displays the portofolio
+
             bool display = true;
             while (display)
             {
