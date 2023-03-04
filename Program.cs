@@ -125,7 +125,7 @@ namespace ConsoleApplication
 
         }
 
-        public int calculateChanges()
+        public int calculateChanges() //needs to be calculated before fetch of new data
         { //calculates the changes of the portofolio
             int changes = 0;
             //get securities from database
@@ -141,10 +141,10 @@ namespace ConsoleApplication
             //get the total value of the portofolio
 
             List<Modules.DisplayedSecurity> securities = db.GetDisplayedSecurities();
-            int total = calculateTotal(securities);
             
             Console.Clear();
-            Console.WriteLine(total);
+            Console.WriteLine($"Total portfolio value: {calculateTotal(securities)}");
+            Console.WriteLine($"Total portfolio changes: {calculateChanges()}%");
 
             //clear the console first and then display the portofolio
             while (true)
