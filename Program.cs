@@ -8,8 +8,6 @@ namespace ConsoleApplication
     {
         static void Main()
         {
-        Console.WriteLine("Welcome!\n\n");
-
         Functions f = new Functions();
         while(true)
         {
@@ -112,14 +110,19 @@ namespace ConsoleApplication
             db.PurgeDatabase();
         }
 
-        public int calculateTotal()
+        public int calculateTotal(List<Modules.DisplayedSecurity> securities)
         { //calculates the total value of the portofolio
-            int total = 0;
+            double total = 0;
+            for (int i = 0; i < securities.Count; i++)
+            {
+                total += securities[i].Price * securities[i].Quantity;
+            }
             //get securities from database
             //if date of fetch is not todays date, fetch new data
             //calculate total value
             //return total
-            return total;
+            return (int)Math.Round(total);
+
         }
 
         public int calculateChanges()
@@ -136,14 +139,28 @@ namespace ConsoleApplication
         { //displays the portofolio
             //start a timer if the timer is > 4 hours, refresh the data
             //get the total value of the portofolio
+
+            List<Modules.DisplayedSecurity> securities = db.GetDisplayedSecurities();
+            int total = calculateTotal(securities);
             
-            bool display = true;
             Console.Clear();
+            Console.WriteLine(total);
 
             //clear the console first and then display the portofolio
-            while (display)
+            while (true)
             {
-                Console.Write("\r{0}%   ", 100);
+                if (Console.KeyAvailable)
+    {
+                    // Read the key that was pressed
+                    ConsoleKeyInfo key = Console.ReadKey(true);
+
+                    // Check if the key was Enter
+                    if (key.Key == ConsoleKey.Enter)
+                    {
+                        break; // Exit the while loop
+                    }
+                }
+
             }
         }
     }
