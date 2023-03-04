@@ -1,48 +1,45 @@
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
+
 
 
 namespace API 
 {
-    class Get
+   public class Get
     {
-        static public int GetStockPrice(string ticker)
+        static public string API_KEY = "E6TUK887BIOZOONH";
+        public static async Task<double> GetStockPrice(string ticker)
         {
+            var apiUrl = $"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={ticker}&apikey={API_KEY}";
+
+            using var httpClient = new HttpClient();
+            var response = await httpClient.GetAsync(apiUrl);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var responseData = JObject.Parse(responseContent)["Global Quote"];
+            var stockPrice = responseData.Value<double>("05. price");
+            return stockPrice;
             //API to get the price of stock price
-            return 0;
         }
 
-       static public int GetCryptoPrice(string ticker)
+        public static async Task<Double> GetCryptoPrice(string ticker)
         {
-            //API to get the price of crypto price
-            return 0;
-        }
+            HttpClient client = new HttpClient();
+            string url = $"https://api.coinbase.com/v2/prices/{ticker}-USD/spot";
+            HttpResponseMessage response = await client.GetAsync(url);
 
-        static public int GetBondPrice(string ticker)
+        if (response.IsSuccessStatusCode)
         {
-            //API to get the price of bond price
-            return 0;
+            string responseString = await response.Content.ReadAsStringAsync();
+            dynamic jsonResponse = Newtonsoft.Json.JsonConvert.DeserializeObject(responseString);
+            return jsonResponse.data.amount;
         }
-
-        static public int GetETFPrice(string ticker)
+        else
         {
-            //API to get the price of ETF price
-            return 0;
+            throw new Exception($"Failed to fetch crypto price for {ticker} with status code {response.StatusCode}.");
         }
-
-        static public int GetIndexFundPrice(string ticker)
-        {
-            //API to get the price of index fund price
-            return 0;
-        }
-
-        static public int GetMutualFundPrice(string ticker)
-        {
-            //API to get the price of mutual fund price
-            return 0;
-        }
-
-
-
     }
+        }
+
+
 }

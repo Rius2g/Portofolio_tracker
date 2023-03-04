@@ -68,6 +68,7 @@ namespace ConsoleApplication
             //Ticker
             //Holdings
             //The program does the rest
+            Console.Clear();
             Console.WriteLine("Enter the type of security you want to add\n 1. Crypto\n 2. Stock\n 3. Bond\n 4. ETF\n 5. Mutual Fund\n 6. Index Fund\n");
             int type = Convert.ToInt32(Console.ReadLine());
             if (type < 1 || type > 6)
@@ -76,12 +77,6 @@ namespace ConsoleApplication
             }
             else
             {
-                Console.WriteLine("Enter the name");
-                string? name =  Console.ReadLine();
-                if (string.IsNullOrEmpty(name))
-                {
-                    throw new Exception("Invalid name");
-                }
                 Console.WriteLine("Enter the ticker");
                 string? ticker =  Console.ReadLine();
 
@@ -92,7 +87,7 @@ namespace ConsoleApplication
 
                 Console.WriteLine("Enter the holdings");
                 int holdings = Convert.ToInt32(Console.ReadLine());
-                Modules.Security security = new Modules.Security(name, ticker, holdings, type);
+                Modules.Security security = new Modules.Security(ticker, holdings, type);
                 db.AddSecurity(security); //add the security to the database 
                 
             }
