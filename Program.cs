@@ -38,6 +38,8 @@ namespace ConsoleApplication
              
     public class Functions
     {
+        public Database.Database db = new Database.Database();
+
 
         public int Menu()
         {
@@ -83,6 +85,7 @@ namespace ConsoleApplication
                 Console.WriteLine("Enter the holdings");
                 int holdings = Convert.ToInt32(Console.ReadLine());
                 Modules.Security security = new Modules.Security(name, ticker, holdings, type);
+                db.AddSecurity(security); //add the security to the database 
                 
             }
         }

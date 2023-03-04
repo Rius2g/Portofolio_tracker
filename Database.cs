@@ -26,7 +26,7 @@ namespace Database //do all the setup and functions for database
             connection.Close();
         }
 
-        public void AddSecurity(string name, string ticker, int quantity, int type)
+        public void AddSecurity(Modules.Security security)
         {
             // Create a new database connection:
             var connectionStringBuilder = new SqliteConnectionStringBuilder();
@@ -37,29 +37,29 @@ namespace Database //do all the setup and functions for database
             DateTime time = DateTime.Now;
 
             //fetch the price of the security
-            if (type == 2) //stock
+            if (security.Type == 2) //stock
             {
-                price = API.Get.GetStockPrice(ticker);
+                price = API.Get.GetStockPrice(security.Ticker);
             }
-            else if (type == 1) //crypto
+            else if (security.Type == 1) //crypto
             {
-                price = API.Get.GetCryptoPrice(ticker);
+                price = API.Get.GetCryptoPrice(security.Ticker);
             }
-            else if (type == 3) //bond
+            else if (security.Type == 3) //bond
             {
-                price = API.Get.GetBondPrice(ticker);
+                price = API.Get.GetBondPrice(security.Ticker);
             }
-            else if (type == 4) //etf
+            else if (security.Type == 4) //etf
             {
-                price = API.Get.GetETFPrice(ticker);
+                price = API.Get.GetETFPrice(security.Ticker);
             }
-            else if (type == 6) //index fund
+            else if (security.Type == 6) //index fund
             {
-                price = API.Get.GetIndexFundPrice(ticker);
+                price = API.Get.GetIndexFundPrice(security.Ticker);
             }
-            else if (type == 5) //mutual fund
+            else if (security.Type == 5) //mutual fund
             {
-                price = API.Get.GetMutualFundPrice(ticker);
+                price = API.Get.GetMutualFundPrice(security.Ticker);
             }
 
             // Open the connection:
@@ -67,7 +67,8 @@ namespace Database //do all the setup and functions for database
 
             // Insert some data:
             var insertCommand = connection.CreateCommand();
-            insertCommand.CommandText = "INSERT INTO Securities VALUES ('" + name + "', '" + ticker + "', " + price + ", " + quantity + ", '" + date + "', '" + time + "', '" + type + "')";
+            insertCommand.CommandText = "INSERT INTO Securities VALUES ('" + security.Name + "', '" + security.Ticker + "', " + price + 
+            ", " + security.Quantity + ", '" + date + "', '" + time + "', '" + security.Type + "')";
             insertCommand.ExecuteNonQuery();
 
             // Close the connection:
