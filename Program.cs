@@ -81,27 +81,49 @@ namespace ConsoleApplication
             //The program does the rest
             Console.Clear();
             Console.WriteLine("Enter the type of security you want to add\n 1. Crypto\n 2. Stock\n 3. ETF\n 4. Mutual Fund\n 5. Index Fund\n");
-            int type = Convert.ToInt32(Console.ReadLine());
-            if (type < 1 || type > 6)
-            {
-                throw new Exception("Invalid type");
-            }
-            else
-            {
-                Console.WriteLine("Enter the ticker");
-                string? ticker =  Console.ReadLine();
+            ConsoleKeyInfo key = Console.ReadKey(true);
 
-                if(string.IsNullOrEmpty(ticker))
-                {
-                    throw new Exception("Invalid ticker");
-                }
+// Check if the key was Enter
+            int type = 0;
+            while (true)
+{
+    if (char.IsDigit(key.KeyChar))
+    {
+        type = int.Parse(key.KeyChar.ToString());
+        if (type < 1 || type > 6)
+        {
+            Console.WriteLine("Invalid type. Please enter a number between 1 and 6.");
+            continue;
+        }
+        else 
+        {
+            Console.WriteLine("Enter the ticker:");
+            string? ticker = Console.ReadLine();
 
-                Console.WriteLine("Enter the holdings");
-                int holdings = Convert.ToInt32(Console.ReadLine());
-                Modules.Security security = new Modules.Security(ticker, holdings, type);
-                db.AddSecurity(security); //add the security to the database 
-                
+            if (string.IsNullOrEmpty(ticker))
+            {
+                Console.WriteLine("Invalid ticker. Please enter a valid ticker.");
+                continue;
             }
+
+            Console.WriteLine("Enter the holdings:");
+            int holdings;
+            if (!int.TryParse(Console.ReadLine(), out holdings))
+            {
+                Console.WriteLine("Invalid holdings. Please enter a valid number.");
+                continue;
+            }
+
+            Modules.Security security = new Modules.Security(ticker, holdings, type);
+            db.AddSecurity(security); //add the security to the database
+            break;
+        }
+    }
+    else
+    {
+        Console.WriteLine("Invalid input. Please enter a number between 1 and 6.");
+    }
+}
         }
 
         public void UpdateSecurity()
@@ -138,52 +160,40 @@ namespace ConsoleApplication
 
         }
 
-        public void listAllHoldings(List<Modules.DisplayedSecurity> securities, int total)
+       public void listAllHoldings(List<Modules.DisplayedSecurity> securities, int total)
         { //lists all the holdings of the portofolio
-            Console.WriteLine("\n");
-            for (int i = 0; i < securities.Count; i++)
-            {
-                int value = (int)Math.Round(securities[i].Price * securities[i].Quantity);
-                Console.WriteLine($"* Ticker: {securities[i].Ticker}\n* Quantity: {securities[i].Quantity}\n* Price: {securities[i].Price}\n* Total: ${value}\n* Percentage: {value / total * 100}%\n");
-            }
-            //get securities from database
-            //if date of fetch is not todays date, fetch new data
-            //calculate total value
-            //return total
+        Console.WriteLine("\n");
+        for (int i = 0; i < securities.Count; i++)
+        {
+            int value = (int)Math.Round(securities[i].Price * securities[i].Quantity);
+            double percentage = (double)value / total * 100;
+            Console.WriteLine($"* Ticker: {securities[i].Ticker}\n* Quantity: {securities[i].Quantity}\n* Price: {securities[i].Price}\n* Last close change: {securities[i].Change}% \n* Total: ${value}\n* Percentage: {percentage.ToString("0.00")}%\n");
         }
+        //get securities from database
+        //if date of fetch is not todays date, fetch new data
+        //calculate total value
+        //return total
+         }
 
-        public double calculateChanges(int oldData, int newData) //needs to be calculated before fetch of new data
-        { //calculates the changes of the portofolio
-            //get securities from database
-            //if date of fetch is not todays date, fetch new data
-            //calculate changes in % and $
-            //return changes
-            if (oldData == 0)
-            {
-                return 100;
-            }
-            return (newData - oldData) / oldData * 100;
 
+        public int calculateChange(int oldTotal, int newTotal)
+        { //calculates the change in the portofolio
+            //get the old total value of the portofolio
+            //get the new total value of the portofolio
+            //calculate the change
+            //return the change
+            return (newTotal - oldTotal) / oldTotal * 100;
         }
 
         public void DisplayPortofolio()
         { //displays the portofolio
             //start a timer if the timer is > 4 hours, refresh the data
             //get the total value of the portofolio
-            DateTime now = DateTime.Now;
-            List<Modules.DisplayedSecurity> oldSecuritiesData = new List<Modules.DisplayedSecurity>();
-            string date = now.ToString("yyyy-MM-dd");
-            if(db.lastFetch != date)
-            {
-                oldSecuritiesData = db.GetDisplayedSecurities();
-                db.NewPrice();
-            }
-            List<Modules.DisplayedSecurity> securities = db.GetDisplayedSecurities();
             Console.Clear();
+            List<Modules.DisplayedSecurity> securities = db.GetDisplayedSecurities(); //get old prices before update
             int newTotal = calculateTotal(securities);
-            int oldTotal = calculateTotal(oldSecuritiesData);
             Console.WriteLine($"Total portfolio value: ${newTotal}");
-            Console.WriteLine($"Total portfolio changes: {calculateChanges(oldTotal, newTotal)}%");
+
             Console.WriteLine("Displaying portofolio");
             listAllHoldings(securities, newTotal);
 

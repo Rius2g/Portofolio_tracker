@@ -14,6 +14,8 @@ namespace Modules
         public DateTime Time { get; set; }
         public int Type { get; set; }
 
+        public double Change { get; set; }
+
         public Security(string ticker, int quantity, int type)
         {
             Ticker = ticker;
@@ -29,12 +31,15 @@ namespace Modules
         public int Quantity { get; set; }
         public int Type { get; set; }
 
-        public DisplayedSecurity(string ticker, float price, int quantity, int type)
+        public double Change { get; set; }
+
+        public DisplayedSecurity(string ticker, float price, int quantity, int type, double change)
         {
             Ticker = ticker;
             Price = price;
             Quantity = quantity;
             Type = type;
+            Change = change;
         }
     }
 }

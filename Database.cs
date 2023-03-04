@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Data.Sqlite;
+using System.Globalization;
 
 
 namespace Database //do all the setup and functions for database
@@ -26,7 +27,7 @@ namespace Database //do all the setup and functions for database
 
                 // Create a new command:
                 var createTableCommand = connection.CreateCommand();
-                createTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS Securities (Ticker TEXT, Price REAL, Quantity INTEGER, Date TEXT, Time TEXT, Type INTEGER)";
+                createTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS Securities (Ticker TEXT, Price REAL, Quantity INTEGER, Change REAL, Date TEXT, Time TEXT, Type INTEGER)";
                 createTableCommand.ExecuteNonQuery();
 
                 // Close the connection:
@@ -34,43 +35,58 @@ namespace Database //do all the setup and functions for database
             }
         }
 
-        public async void AddSecurity(Modules.Security security)
-        {
-            // Create a new database connection:
-            var connectionStringBuilder = new SqliteConnectionStringBuilder();
-            connectionStringBuilder.DataSource = "Holdings.db";
-            var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
-            double price = 0;
-            DateTime date = DateTime.Now;
-            DateTime time = DateTime.Now;
+       public async void AddSecurity(Modules.Security security)
+{
+    // Create a new database connection:
+    var connectionStringBuilder = new SqliteConnectionStringBuilder();
+    connectionStringBuilder.DataSource = "Holdings.db";
+    var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
+    double price = 0;
+    double change = 0;
+    DateTime date = DateTime.Now;
+    DateTime time = DateTime.Now;
 
-            //fetch the price of the security
-            if (security.Type == 1) //crypto
-            {
-                price = await api.GetCryptoPrice(security.Ticker);
-                string priceString = price.ToString();
-                price = Convert.ToDouble(priceString);
-            }
-            else if (security.Type == 2 || security.Type == 3 || security.Type == 6) //stock, etf, index fund
-            {
-                price = await api.GetStockPrice(security.Ticker);
-            }
-          
-            else if (security.Type == 5) //mutual fund
-            {
-                price = await api.GetMutualFundPrice(security.Ticker);
-            }
+    //fetch the price of the security
+    if (security.Type == 1) //crypto
+    {
+        var result = await api.GetCryptoPriceAndPercentChange(security.Ticker);
+        price = result.Item1;
+        change = result.Item2;
+    }
+    else if (security.Type == 2 || security.Type == 3 || security.Type == 6) //stock, etf, index fund
+    {
+        var result = await api.GetStockPriceAndPercentChange(security.Ticker);
+        price = result.Item1;
+        change = result.Item2;
+    }
+    else if (security.Type == 5) //mutual fund
+    {
+        price = await api.GetMutualFundPrice(security.Ticker);
+    }
 
-            // Open the connection:
-            connection.Open();
-            // Insert some data:
-            var insertCommand = connection.CreateCommand();
-            insertCommand.CommandText = "INSERT INTO Securities (Ticker, Price, Quantity, Date, Time, Type) VALUES ('" + security.Ticker + "', " + price.ToString().Replace(",", ".") + ", " + security.Quantity + ", '" + date.ToString("yyyy-MM-dd") + "', '" + time.ToString("HH:mm") + "', '" + security.Type + "')";
-            insertCommand.ExecuteNonQuery();
+    // Convert the change to a string with two decimal places, and replace the comma with a period:
+    string changeString = change.ToString("0.00", CultureInfo.InvariantCulture).Replace(',', '.');
 
-            // Close the connection:
-            connection.Close();
-        }
+    // Try to parse the change value with the correct format:
+    if (double.TryParse(changeString, NumberStyles.Any, CultureInfo.InvariantCulture, out double changeValue))
+    {
+        change = changeValue;
+    }
+
+    // Convert the price to a string, and replace the comma with a period:
+    string priceString = price.ToString("0.00", CultureInfo.InvariantCulture).Replace(',', '.');
+
+    // Open the connection:
+    connection.Open();
+
+    // Insert some data:
+    var insertCommand = connection.CreateCommand();
+    insertCommand.CommandText = "INSERT INTO Securities (Ticker, Price, Quantity, Change, Date, Time, Type) VALUES ('" + security.Ticker + "', '" + priceString + "', '" + security.Quantity + "', '" + changeString + "', '" + date.ToString("yyyy-MM-dd") + "', '" + time.ToString("HH:mm") + "', '" + security.Type + "')";
+    insertCommand.ExecuteNonQuery();
+
+    // Close the connection:
+    connection.Close();
+}
 
         public void DeleteSecurity(string ticker)
         {
@@ -91,8 +107,30 @@ namespace Database //do all the setup and functions for database
             connection.Close();
         }
 
-        public void UpdateSecurity(string ticker, float price, int quantity, DateTime date, DateTime time, string type)
+        public async void UpdateSecurity(Modules.Security security)
         {
+            double price = 0;
+            double change = 0;
+            if (security.Type == 1) //crypto
+            {
+                var result = await api.GetCryptoPriceAndPercentChange(security.Ticker);
+                price = result.Item1;
+                change = result.Item2;
+                string priceString = price.ToString();
+                price = Convert.ToDouble(priceString);
+            }
+            else if (security.Type == 2 || security.Type == 3 || security.Type == 6) //stock, etf, index fund
+            {
+                var result = await api.GetStockPriceAndPercentChange(security.Ticker);
+                price = result.Item1;
+                change = result.Item2;
+            }
+          
+            else if (security.Type == 5) //mutual fund
+            {
+                price = await api.GetMutualFundPrice(security.Ticker);
+            }
+
             // Create a new database connection:
             var connectionStringBuilder = new SqliteConnectionStringBuilder();
             connectionStringBuilder.DataSource = "Holdings.db";
@@ -103,37 +141,19 @@ namespace Database //do all the setup and functions for database
 
             // Update some data:
             var updateCommand = connection.CreateCommand();
-            updateCommand.CommandText = "UPDATE Securities SET Price = " + price + ", Quantity = " + quantity + ", Date = '" + date + "', Time = '" + time + "', Type = '" + type + "' WHERE Ticker = '" + ticker + "'";
+            updateCommand.CommandText = "UPDATE Securities SET Price = " + price + ", Quantity = " + security.Quantity + ", Date = '" + security.Date + "', Time = '" + security.Time + "', Type = '" + security.Type + "' WHERE Ticker = '" + security.Ticker + "'";
             updateCommand.ExecuteNonQuery();
 
             // Close the connection:
             connection.Close();
         }
 
-
-        public async void NewPrice() //function to update the price of all securities if date is different from last update
+        public void UpdateSecurities(List<Modules.Security> securities)
         {
-            //first fetch the entire list and see if any are outdated 
-            List<Modules.Security> securities = GetSecurities();
-            DateTime date = DateTime.Now;
-            foreach (Modules.Security security in securities)
+           foreach (Modules.Security security in securities)
             {
-                    //fetch the price of the security
-                    double price = 0;
-                    if (security.Type == 1) //crypto
-                    {
-                        price = await api.GetCryptoPrice(security.Ticker);
-                        string priceString = price.ToString();
-                        price = Convert.ToDouble(priceString);
-                    }
-                    else if (security.Type == 2 || security.Type == 3 || security.Type == 6) //stock, etf, index fund
-                    price = await api.GetStockPrice(security.Ticker);
-                    else if (security.Type == 5) //mutual fund
-                    price = api.GetMutualFundPrice(security.Ticker).Result;
-                    //update the price
-                    UpdateSecurity(security.Ticker, (float)price, security.Quantity, date, DateTime.Now, security.Type.ToString());
+                UpdateSecurity(security);
             }
-            // Create a new database connection:
         }
 
 
@@ -156,7 +176,7 @@ namespace Database //do all the setup and functions for database
             connection.Close();
         }
 
-        public List<Modules.DisplayedSecurity> GetDisplayedSecurities()
+        public List<Modules.DisplayedSecurity> GetDisplayedSecurities() 
         {
            DateTime time= DateTime.Now;
 
@@ -172,13 +192,13 @@ namespace Database //do all the setup and functions for database
 
             // Read some data:
             var selectCommand = connection.CreateCommand();
-            selectCommand.CommandText = "SELECT Ticker, Price, Quantity, Date, Time, Type FROM Securities";
+            selectCommand.CommandText = "SELECT Ticker, Price, Quantity, Change, Date, Time, Type FROM Securities";
             using (var reader = selectCommand.ExecuteReader())
             {
                 List<Modules.DisplayedSecurity> securities = new List<Modules.DisplayedSecurity>();
                 while (reader.Read())
                 {
-                    Modules.DisplayedSecurity security = new Modules.DisplayedSecurity(reader.GetString(0), reader.GetFloat(1), reader.GetInt16(2), reader.GetInt16(3));
+                    Modules.DisplayedSecurity security = new Modules.DisplayedSecurity(reader.GetString(0), reader.GetFloat(1), reader.GetInt16(2), reader.GetInt16(6), reader.GetDouble(3));
                     securities.Add(security);
                 }
                 return securities;
@@ -197,17 +217,17 @@ namespace Database //do all the setup and functions for database
 
             // Read some data:
             var selectCommand = connection.CreateCommand();
-            selectCommand.CommandText = "SELECT Ticker, Price, Quantity, Date, Time, Type FROM Securities";
+            selectCommand.CommandText = "SELECT Ticker, Price, Quantity, Change, Date, Time, Type FROM Securities";
             using (var reader = selectCommand.ExecuteReader())
             {
                 List<Modules.Security> securities = new List<Modules.Security>();
                 while (reader.Read())
                 {
-                    Modules.Security security = new Modules.Security(reader.GetString(0), reader.GetInt16(2), reader.GetInt16(5));
-                    security.Date = reader.GetDateTime(3);
-                    security.Time = reader.GetDateTime(4);
+                    Modules.Security security = new Modules.Security(reader.GetString(0), reader.GetInt16(2), reader.GetInt16(6));
+                    security.Date = reader.GetDateTime(4);
+                    security.Time = reader.GetDateTime(5);
                     security.Price = reader.GetFloat(1);
-                    securities.Add(security);
+                    security.Change = reader.GetFloat(3);
                 }
                 return securities;
             }
