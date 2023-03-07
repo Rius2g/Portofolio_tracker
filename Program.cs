@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using System;
 using System.Data.SqlClient;
-using System.Timers;
+using System.Diagnostics;
 
 namespace ConsoleApplication
 {
@@ -25,7 +25,7 @@ namespace ConsoleApplication
                 f.RemoveSecurity();
                 break;
             case 4:
-                f.DisplayPortofolio();
+                f.DisplayPortfolio();
                 break;
             case 5:
                 f.PurgeDatabase();
@@ -153,10 +153,6 @@ public class Functions
             {
                 total += securities[i].Price * securities[i].Quantity;
             }
-            //get securities from database
-            //if date of fetch is not todays date, fetch new data
-            //calculate total value
-            //return total
             return (int)Math.Round(total);
 
         }
@@ -168,7 +164,15 @@ public class Functions
         {
             int value = (int)Math.Round(securities[i].Price * securities[i].Quantity);
             double percentage = (double)value / total * 100;
-            Console.WriteLine($"* Ticker: {securities[i].Ticker}\n* Quantity: {securities[i].Quantity}\n* Price: {securities[i].Price}\n* Value: {value}\n* Percentage: {percentage}%\n* Type: {returnType(securities[i].Type)}\n");
+            Console.WriteLine($"* Ticker: {securities[i].Ticker}");
+            Console.WriteLine($"* Quantity: {securities[i].Quantity}");
+            Console.WriteLine($"* Price: {securities[i].Price}");
+            Console.WriteLine($"* Value: {value}");
+            Console.ForegroundColor = (securities[i].Change >= 0) ? ConsoleColor.Green : ConsoleColor.Red;
+            Console.WriteLine($"* Change: {securities[i].Change}%");
+            Console.ResetColor();
+            Console.WriteLine($"* Percentage: {percentage}%");
+            Console.WriteLine($"* Type: {returnType(securities[i].Type)}");
         }
         //get securities from database
         //if date of fetch is not todays date, fetch new data
@@ -239,58 +243,90 @@ public class Functions
         }
 
 
-        public int calculateChange(int oldTotal, int newTotal)
-        { //calculates the change in the portofolio
-            //get the old total value of the portofolio
-            //get the new total value of the portofolio
-            //calculate the change
-            //return the change
-            return (newTotal - oldTotal) / oldTotal * 100;
+    public double calculateChange_percent(List<Modules.DisplayedSecurity> securities)
+    {
+        // Calculate the total value of the portfolio
+        double totalValue = calculateTotal(securities);
+
+        // Calculate the total change for the portfolio based on each security's change and percentage of the portfolio
+        double totalChange = 0;
+        foreach (var security in securities)
+        {
+            double value = security.Price * security.Quantity;
+            double percentage = value / totalValue;
+            totalChange += (percentage * security.Change * security.Price);
         }
 
-        private void onTimedEvent(object source, ElapsedEventArgs e)
-        { 
+        // Return the total change as a percentage
+        return Math.Round((totalChange / totalValue) * 100, 2);
+    }
 
-            Console.WriteLine("Updating data");
-            db.updatePrices();
-        }
+   public double calculateChange_price(List<Modules.DisplayedSecurity> securities)
+    {
+    double totalValue = calculateTotal(securities);
+    double totalChange = 0;
 
-        public void DisplayPortofolio()
-        { //displays the portofolio
-            //start a timer if the timer is > 4 hours, refresh the data
-            //get the total value of the portofolio
-            List<Modules.DisplayedSecurity> OldSecurities = db.GetDisplayedSecurities(); //get old prices before update
-            var timer = new System.Timers.Timer(60 * 60 * 1000 / 4); //every 15 minutes
-            timer.Elapsed += onTimedEvent;
-            timer.Enabled = true;
-            Console.Clear();
-            List<Modules.DisplayedSecurity> NewSecurities = db.GetDisplayedSecurities(); //get old prices before update
-            int newTotal = calculateTotal(NewSecurities);
-            int oldTotal = calculateTotal(OldSecurities);
-            Console.WriteLine($"Total portfolio value: ${newTotal}");
-            Console.WriteLine($"Change: {calculateChange(oldTotal, newTotal)}%");
+    foreach (var security in securities)
+    {
+        double value = security.Price * security.Quantity;
+        double percentage = value / totalValue;
+        totalChange += percentage * security.Change * security.Price;
+    }
 
-            Console.WriteLine("Displaying portofolio");
-            displayAllocations(NewSecurities, newTotal);
-            listAllHoldings(NewSecurities, newTotal);
+    return Math.Round(totalChange, 2);
+    }
 
-            while (true)
+
+    public void DisplayPortfolio()
+    {
+        const int RefreshIntervalMinutes = 15;
+
+        Stopwatch refreshTimer = new Stopwatch();
+        refreshTimer.Start();
+
+        //displays the portfolio
+        Console.Clear();
+
+        while (true)
+        {
+            // Check if it's time to refresh the prices
+            if (refreshTimer.Elapsed.TotalMinutes >= RefreshIntervalMinutes)
             {
-                if (Console.KeyAvailable)
-                {
-                    // Read the key that was pressed
-                    ConsoleKeyInfo key = Console.ReadKey(true);
-
-                    // Check if the key was Enter
-                    if (key.Key == ConsoleKey.Enter)
-                    {
-                        break; // Exit the while loop
-                    }
-                }
-
+                db.updatePrices();
+                refreshTimer.Restart();
             }
+            Console.Clear();
+            // Get the updated securities and total value
+            List<Modules.DisplayedSecurity> securities = db.GetDisplayedSecurities();
+            int totalValue = calculateTotal(securities);
+
+            double change = calculateChange_percent(securities);
+            double priceChange = calculateChange_price(securities);
+            Console.ForegroundColor = (change >= 0) ? ConsoleColor.Green : ConsoleColor.Red;
+            // Display the portfolio information
+            Console.WriteLine($"Total portfolio value: ${totalValue}");
+            Console.WriteLine($"Change: {change}% ${Math.Abs(priceChange)}\n");
+            Console.ResetColor();
+
+            Console.WriteLine("Displaying portfolio");
+            displayAllocations(securities, totalValue);
+            listAllHoldings(securities, totalValue);
+
+            if (Console.KeyAvailable)
+            {
+                // Read the key that was pressed
+                ConsoleKeyInfo key = Console.ReadKey(true);
+
+                // Check if the key was Enter
+                if (key.Key == ConsoleKey.Enter)
+                {
+                    break; // Exit the while loop
+                }
+            }
+            Thread.Sleep(1000);
         }
     }
+}
 }
 
 
