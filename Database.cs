@@ -232,6 +232,12 @@ namespace Database //do all the setup and functions for database
                 return securities;
             }
         }
+
+        public void updatePrices()
+        {
+            List<Modules.Security> securities = GetSecurities();
+            UpdateSecurities(securities);
+        }
     }
 
 }

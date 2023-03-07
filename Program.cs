@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System;
 using System.Data.SqlClient;
+using System.Timers;
 
 namespace ConsoleApplication
 {
@@ -40,8 +41,8 @@ namespace ConsoleApplication
         }
     }
              
-    public class Functions
-    {
+public class Functions
+{
         public Database.Database db = new Database.Database();
 
 
@@ -74,7 +75,7 @@ namespace ConsoleApplication
         public void AddSecurity()
         { //adds a securiy to the database/portofolio
             Console.WriteLine("Adding security");
-
+            
             //type (crpyto, stock, bond, etc.)
             //Ticker
             //Holdings
@@ -167,13 +168,73 @@ namespace ConsoleApplication
         {
             int value = (int)Math.Round(securities[i].Price * securities[i].Quantity);
             double percentage = (double)value / total * 100;
-            Console.WriteLine($"* Ticker: {securities[i].Ticker}\n* Quantity: {securities[i].Quantity}\n* Price: {securities[i].Price}\n* Last close change: {securities[i].Change}% \n* Total: ${value}\n* Percentage: {percentage.ToString("0.00")}%\n");
+            Console.WriteLine($"* Ticker: {securities[i].Ticker}\n* Quantity: {securities[i].Quantity}\n* Price: {securities[i].Price}\n");
+            Console.WriteLine($"* Value: {value}\n* Percentage: {percentage}%\n");
+            Console.WriteLine($"* Type: {returnType(securities[i].Type)}\n");
         }
         //get securities from database
         //if date of fetch is not todays date, fetch new data
         //calculate total value
         //return total
          }
+
+        public string returnType(int type)
+         { //returns the type of security
+            switch (type)
+            {
+                case 1:
+                    return "Crypto";
+                case 2:
+                    return "Stock";
+                case 3:
+                    return "ETF";
+                case 4:
+                    return "Mutual Fund";
+                case 5:
+                    return "Index Fund";
+                default:
+                    return "Invalid type";
+            }
+         }
+
+        public void displayAllocations(List<Modules.DisplayedSecurity> securities, int total)
+        {
+            int crypto = 0;
+            int stock = 0;
+            int etf = 0;
+            int mutual = 0;
+            int index = 0;
+
+            for (int i = 0; i < securities.Count; i++)
+            {
+                int value = (int)Math.Round(securities[i].Price * securities[i].Quantity);
+                double percentage = (double)value / total * 100;
+                switch (securities[i].Type)
+                {
+                    case 1:
+                        crypto += value;
+                        break;
+                    case 2:
+                        stock += value;
+                        break;
+                    case 3:
+                        etf += value;
+                        break;
+                    case 4:
+                        mutual += value;
+                        break;
+                    case 5:
+                        index += value;
+                        break;
+                }
+            }
+
+            Console.WriteLine($"Crypto: {crypto.ToString("0.00")}%");
+            Console.WriteLine($"Stock: {stock.ToString("0.00")}%");
+            Console.WriteLine($"ETF: {etf.ToString("0.00")}%");
+            Console.WriteLine($"Mutual Fund: {mutual.ToString("0.00")}%");
+            Console.WriteLine($"Index Fund: {index.ToString("0.00")}%");
+        }
 
 
         public int calculateChange(int oldTotal, int newTotal)
@@ -185,23 +246,36 @@ namespace ConsoleApplication
             return (newTotal - oldTotal) / oldTotal * 100;
         }
 
+        private void onTimedEvent(object source, ElapsedEventArgs e)
+        { 
+
+            Console.WriteLine("Updating data");
+            db.updatePrices();
+        }
+
         public void DisplayPortofolio()
         { //displays the portofolio
             //start a timer if the timer is > 4 hours, refresh the data
             //get the total value of the portofolio
+            List<Modules.DisplayedSecurity> OldSecurities = db.GetDisplayedSecurities(); //get old prices before update
+            var timer = new System.Timers.Timer(60 * 60 * 1000 / 4); //every 15 minutes
+            timer.Elapsed += onTimedEvent;
+            timer.Enabled = true;
             Console.Clear();
-            List<Modules.DisplayedSecurity> securities = db.GetDisplayedSecurities(); //get old prices before update
-            int newTotal = calculateTotal(securities);
+            List<Modules.DisplayedSecurity> NewSecurities = db.GetDisplayedSecurities(); //get old prices before update
+            int newTotal = calculateTotal(NewSecurities);
+            int oldTotal = calculateTotal(OldSecurities);
             Console.WriteLine($"Total portfolio value: ${newTotal}");
+            Console.WriteLine($"Change: {calculateChange(oldTotal, newTotal)}%");
 
             Console.WriteLine("Displaying portofolio");
-            listAllHoldings(securities, newTotal);
+            displayAllocations(NewSecurities, newTotal);
+            listAllHoldings(NewSecurities, newTotal);
 
-            //clear the console first and then display the portofolio
             while (true)
             {
                 if (Console.KeyAvailable)
-    {
+                {
                     // Read the key that was pressed
                     ConsoleKeyInfo key = Console.ReadKey(true);
 
