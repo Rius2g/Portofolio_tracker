@@ -167,12 +167,12 @@ public class Functions
             Console.WriteLine($"* Ticker: {securities[i].Ticker}");
             Console.WriteLine($"* Quantity: {securities[i].Quantity}");
             Console.WriteLine($"* Price: {securities[i].Price}");
-            Console.WriteLine($"* Value: {value}");
+            Console.WriteLine($"* Value: ${value}");
             Console.ForegroundColor = (securities[i].Change >= 0) ? ConsoleColor.Green : ConsoleColor.Red;
             Console.WriteLine($"* Change: {securities[i].Change}%");
             Console.ResetColor();
-            Console.WriteLine($"* Percentage: {percentage}%");
-            Console.WriteLine($"* Type: {returnType(securities[i].Type)}");
+            Console.WriteLine($"* Percentage of portofolio: {Math.Round(percentage,2)}%");
+            Console.WriteLine($"* Type: {returnType(securities[i].Type)}\n\n");
         }
         //get securities from database
         //if date of fetch is not todays date, fetch new data
@@ -229,6 +229,11 @@ public class Functions
                         break;
                 }
             }
+            if(total == 0)
+            {
+                Console.WriteLine("No holdings to display.");
+                return;
+            }
             crypto = crypto / total * 100;
             stock = stock / total * 100;
             etf = etf / total * 100;
@@ -243,22 +248,22 @@ public class Functions
         }
 
 
-    public double calculateChange_percent(List<Modules.DisplayedSecurity> securities)
+  public double calculateChange_percent(List<Modules.DisplayedSecurity> securities)
     {
-        // Calculate the total value of the portfolio
-        double totalValue = calculateTotal(securities);
+    // Calculate the total value of the portfolio
+    double totalValue = calculateTotal(securities);
 
-        // Calculate the total change for the portfolio based on each security's change and percentage of the portfolio
-        double totalChange = 0;
-        foreach (var security in securities)
-        {
-            double value = security.Price * security.Quantity;
-            double percentage = value / totalValue;
-            totalChange += (percentage * security.Change * security.Price);
-        }
+    // Calculate the total change for the portfolio based on each security's change and percentage of the portfolio
+    double totalChange = 0;
+    foreach (var security in securities)
+    {
+        double value = security.Price * security.Quantity;
+        double percentage = value / totalValue;
+        totalChange += percentage * security.Change;
+    }
 
-        // Return the total change as a percentage
-        return Math.Round((totalChange / totalValue) * 100, 2);
+    // Return the total change as a percentage
+    return Math.Round(totalChange, 2);
     }
 
    public double calculateChange_price(List<Modules.DisplayedSecurity> securities)
@@ -323,7 +328,7 @@ public class Functions
                     break; // Exit the while loop
                 }
             }
-            Thread.Sleep(1000);
+            Thread.Sleep(100000);
         }
     }
 }
