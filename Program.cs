@@ -168,9 +168,7 @@ public class Functions
         {
             int value = (int)Math.Round(securities[i].Price * securities[i].Quantity);
             double percentage = (double)value / total * 100;
-            Console.WriteLine($"* Ticker: {securities[i].Ticker}\n* Quantity: {securities[i].Quantity}\n* Price: {securities[i].Price}\n");
-            Console.WriteLine($"* Value: {value}\n* Percentage: {percentage}%\n");
-            Console.WriteLine($"* Type: {returnType(securities[i].Type)}\n");
+            Console.WriteLine($"* Ticker: {securities[i].Ticker}\n* Quantity: {securities[i].Quantity}\n* Price: {securities[i].Price}\n* Value: {value}\n* Percentage: {percentage}%\n* Type: {returnType(securities[i].Type)}\n");
         }
         //get securities from database
         //if date of fetch is not todays date, fetch new data
@@ -208,7 +206,6 @@ public class Functions
             for (int i = 0; i < securities.Count; i++)
             {
                 int value = (int)Math.Round(securities[i].Price * securities[i].Quantity);
-                double percentage = (double)value / total * 100;
                 switch (securities[i].Type)
                 {
                     case 1:
@@ -228,6 +225,11 @@ public class Functions
                         break;
                 }
             }
+            crypto = crypto / total * 100;
+            stock = stock / total * 100;
+            etf = etf / total * 100;
+            mutual = mutual / total * 100;
+            index = index / total * 100;
 
             Console.WriteLine($"Crypto: {crypto.ToString("0.00")}%");
             Console.WriteLine($"Stock: {stock.ToString("0.00")}%");
