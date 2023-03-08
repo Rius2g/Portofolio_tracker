@@ -81,7 +81,7 @@ public class Functions
             //Holdings
             //The program does the rest
             Console.Clear();
-            Console.WriteLine("Enter the type of security you want to add\n 1. Crypto\n 2. Stock\n 3. ETF\n 4. Mutual Fund\n 5. Index Fund\n");
+            Console.WriteLine("Enter the type of security you want to add\n 1. Crypto\n 2. Stock\n 3. ETF\n 4. Mutual Fund\n 5. Index Fund\n 6. By ISIN");
             ConsoleKeyInfo key = Console.ReadKey(true);
 
 // Check if the key was Enter

@@ -27,7 +27,7 @@ namespace Database //do all the setup and functions for database
 
                 // Create a new command:
                 var createTableCommand = connection.CreateCommand();
-                createTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS Securities (Ticker TEXT, Price REAL, Quantity INTEGER, Change REAL, Date TEXT, Time TEXT, Type INTEGER)";
+                createTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS Securities (Ticker TEXT, Name TEXT, Price REAL, Quantity INTEGER, Change REAL, Date TEXT, Time TEXT, Type INTEGER)";
                 createTableCommand.ExecuteNonQuery();
 
                 // Close the connection:
@@ -43,6 +43,7 @@ namespace Database //do all the setup and functions for database
     var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
     double price = 0;
     double change = 0;
+    string name = "";
     DateTime date = DateTime.Now;
     DateTime time = DateTime.Now;
 
@@ -50,18 +51,30 @@ namespace Database //do all the setup and functions for database
     if (security.Type == 1) //crypto
     {
         var result = await api.GetCryptoPriceAndPercentChange(security.Ticker);
-        price = result.Item1;
-        change = result.Item2;
+        name = result.Item1;
+        price = result.Item2;
+        change = result.Item3;
     }
-    else if (security.Type == 2 || security.Type == 3 || security.Type == 6) //stock, etf, index fund
+    else if (security.Type == 2 || security.Type == 3) //stock, etf, index fund
     {
         var result = await api.GetStockPriceAndPercentChange(security.Ticker);
-        price = result.Item1;
-        change = result.Item2;
+        name = result.Item1;
+        price = result.Item2;
+        change = result.Item3;
     }
     else if (security.Type == 5) //mutual fund
     {
-        price = await api.GetMutualFundPrice(security.Ticker);
+        var result = await api.GetMutualFundPrice(security.Ticker);
+        name = result.Item1;
+        price = result.Item2;
+        change = result.Item3;
+    }
+    else if (security.Type == 6) //by ISIN
+    {
+        var result = await api.GetStockPriceAndPercentChangeByISIN(security.Ticker);
+        name = result.Item1;
+        price = result.Item2;
+        change = result.Item3;
     }
 
     // Convert the change to a string with two decimal places, and replace the comma with a period:
@@ -81,7 +94,7 @@ namespace Database //do all the setup and functions for database
 
     // Insert some data:
     var insertCommand = connection.CreateCommand();
-    insertCommand.CommandText = "INSERT INTO Securities (Ticker, Price, Quantity, Change, Date, Time, Type) VALUES ('" + security.Ticker + "', '" + priceString + "', '" + security.Quantity + "', '" + changeString + "', '" + date.ToString("yyyy-MM-dd") + "', '" + time.ToString("HH:mm") + "', '" + security.Type + "')";
+    insertCommand.CommandText = "INSERT INTO Securities (Ticker, Name, Price, Quantity, Change, Date, Time, Type) VALUES ('" + security.Ticker + "', '" + name + "', '" + priceString + "', '" + security.Quantity + "', '" + changeString + "', '" + date.ToString("yyyy-MM-dd") + "', '" + time.ToString("HH:mm") + "', '" + security.Type + "')";
     insertCommand.ExecuteNonQuery();
 
     // Close the connection:
@@ -114,21 +127,37 @@ namespace Database //do all the setup and functions for database
             if (security.Type == 1) //crypto
             {
                 var result = await api.GetCryptoPriceAndPercentChange(security.Ticker);
-                price = result.Item1;
-                change = result.Item2;
+                price = result.Item2;
+                change = result.Item3;
                 string priceString = price.ToString();
                 price = Convert.ToDouble(priceString);
             }
-            else if (security.Type == 2 || security.Type == 3 || security.Type == 6) //stock, etf, index fund
+            else if (security.Type == 2 || security.Type == 3) //stock, etf, index fund
             {
                 var result = await api.GetStockPriceAndPercentChange(security.Ticker);
-                price = result.Item1;
-                change = result.Item2;
+                price = result.Item2;
+                change = result.Item3;
+                string priceString = price.ToString();
+                price = Convert.ToDouble(priceString);
             }
-          
             else if (security.Type == 5) //mutual fund
             {
-                price = await api.GetMutualFundPrice(security.Ticker);
+                var result = await api.GetMutualFundPrice(security.Ticker);
+                price = result.Item2;
+                change = result.Item3;
+                string priceString = price.ToString();
+                price = Convert.ToDouble(priceString);
+            }
+
+            else if (security.Type == 6) //by ISIN
+            {
+                var result = await api.GetStockPriceAndPercentChangeByISIN(security.Ticker);
+                price = result.Item2;
+                change = result.Item3;
+                string type = result.Item4;
+                security.Type = typeToInt(result.Item4);
+                string priceString = price.ToString();
+                price = Convert.ToDouble(priceString);
             }
 
             // Create a new database connection:
@@ -153,6 +182,38 @@ namespace Database //do all the setup and functions for database
            foreach (Modules.Security security in securities)
             {
                 UpdateSecurity(security);
+            }
+        }
+
+        public int typeToInt(string type)
+        {
+            if (type == "stock")
+            {
+                return 2;
+            }
+            else if (type == "crypto")
+            {
+                return 1;
+            }
+            else if (type == "etf")
+            {
+                return 3;
+            }
+            else if (type == "index fund")
+            {
+                return 4;
+            }
+            else if (type == "mutual fund")
+            {
+                return 5;
+            }
+            else if (type == "Equity - Other")
+            {
+                return 6;
+            }
+            else
+            {
+                return 0;
             }
         }
 
