@@ -90,6 +90,7 @@ namespace API
                 previousClose = (double)historicPrices[1].price;
             }
             double percentChange = (currentPrice - previousClose) / previousClose * 100;
+            Console.WriteLine(cryptoName);
             return Tuple.Create(cryptoName, currentPrice, percentChange);
         }
         else

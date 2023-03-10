@@ -178,7 +178,7 @@ public class Functions
             else
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                priceString = $"${value.ToString("+0;-#;0")}";
+                priceString = $"${value.ToString("0;-#;0")}";
             }
 
             Console.WriteLine("{0,-10} {1,-10} {2,-10} {3,-10} {4,-10} {5,-10}", securities[i].Ticker, securities[i].Quantity, securities[i].Price, priceString, changeString, Math.Round(percentage, 2) + "%");
