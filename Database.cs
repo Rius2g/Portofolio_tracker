@@ -203,13 +203,9 @@ namespace Database //do all the setup and functions for database
             {
                 return 4;
             }
-            else if (type == "mutual fund")
+            else if (type == "mutual fund" || type == "Equity - Other")
             {
                 return 5;
-            }
-            else if (type == "Equity - Other")
-            {
-                return 6;
             }
             else
             {

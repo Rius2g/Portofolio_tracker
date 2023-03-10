@@ -72,29 +72,29 @@ public class Functions
                 return 6;
             }
         }
-        public void AddSecurity()
-        { //adds a securiy to the database/portofolio
-            Console.WriteLine("Adding security");
+    public void AddSecurity()
+    { //adds a securiy to the database/portofolio
+        Console.WriteLine("Adding security");
             
             //type (crpyto, stock, bond, etc.)
             //Ticker
             //Holdings
             //The program does the rest
-            Console.Clear();
-            Console.WriteLine("Enter the type of security you want to add\n 1. Crypto\n 2. Stock\n 3. ETF\n 4. Mutual Fund\n 5. Index Fund\n 6. By ISIN");
-            ConsoleKeyInfo key = Console.ReadKey(true);
+        Console.Clear();
+        Console.WriteLine("Enter the type of security you want to add\n 1. Crypto\n 2. Stock\n 3. ETF\n 4. Mutual Fund\n 5. Index Fund\n 6. By ISI\n 7. Abort");
+        ConsoleKeyInfo key = Console.ReadKey(true);
 
 // Check if the key was Enter
-            int type = 0;
-            while (true)
-{
-    if (char.IsDigit(key.KeyChar))
-    {
+        int type = 0;
+        while (true)
+        {
+        if (char.IsDigit(key.KeyChar))
+        {
         type = int.Parse(key.KeyChar.ToString());
         if (type < 1 || type > 6)
         {
             Console.WriteLine("Invalid type. Please enter a number between 1 and 6.");
-            continue;
+            return;
         }
         else 
         {
@@ -157,28 +157,36 @@ public class Functions
 
         }
 
-       public void listAllHoldings(List<Modules.DisplayedSecurity> securities, int total)
-        { //lists all the holdings of the portofolio
-        Console.WriteLine("\n");
+        public void listAllHoldings(List<Modules.DisplayedSecurity> securities, int total)
+        {
+        Console.WriteLine("\nHoldings:\n");
+        Console.WriteLine("{0,-10} {1,-10} {2,-10} {3,-10} {4,-10} {5,-10}", "Ticker", "Quantity", "Price", "Value", "Change", "Percentage");
         for (int i = 0; i < securities.Count; i++)
         {
             int value = (int)Math.Round(securities[i].Price * securities[i].Quantity);
             double percentage = (double)value / total * 100;
-            Console.WriteLine($"* Ticker: {securities[i].Ticker}");
-            Console.WriteLine($"* Quantity: {securities[i].Quantity}");
-            Console.WriteLine($"* Price: {securities[i].Price}");
-            Console.WriteLine($"* Value: ${value}");
-            Console.ForegroundColor = (securities[i].Change >= 0) ? ConsoleColor.Green : ConsoleColor.Red;
-            Console.WriteLine($"* Change: {securities[i].Change}%");
+            string changeString = $"{securities[i].Change}%";
+            string priceString = $"${value}";
+
+            // Change the color of the Change and Price columns based on the sign of the change
+            if (securities[i].Change >= 0)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                changeString = $"+{securities[i].Change}%";
+                priceString = $"${value.ToString("#;-#;0")}";
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                priceString = $"${value.ToString("+0;-#;0")}";
+            }
+
+            Console.WriteLine("{0,-10} {1,-10} {2,-10} {3,-10} {4,-10} {5,-10}", securities[i].Ticker, securities[i].Quantity, securities[i].Price, priceString, changeString, Math.Round(percentage, 2) + "%");
+
             Console.ResetColor();
-            Console.WriteLine($"* Percentage of portofolio: {Math.Round(percentage,2)}%");
-            Console.WriteLine($"* Type: {returnType(securities[i].Type)}\n\n");
         }
-        //get securities from database
-        //if date of fetch is not todays date, fetch new data
-        //calculate total value
-        //return total
-         }
+        Console.WriteLine();
+        }
 
         public string returnType(int type)
          { //returns the type of security
@@ -286,50 +294,54 @@ public class Functions
     {
         const int RefreshIntervalMinutes = 15;
 
-        Stopwatch refreshTimer = new Stopwatch();
-        refreshTimer.Start();
+    Stopwatch refreshTimer = new Stopwatch();
+    refreshTimer.Start();
 
-        //displays the portfolio
-        Console.Clear();
+    //displays the portfolio
+    Console.Clear();
+    Console.WriteLine();
 
-        while (true)
+    while (true)
+    {
+        // Check if it's time to refresh the prices
+        if (refreshTimer.Elapsed.TotalMinutes >= RefreshIntervalMinutes)
         {
-            // Check if it's time to refresh the prices
-            if (refreshTimer.Elapsed.TotalMinutes >= RefreshIntervalMinutes)
-            {
-                db.updatePrices();
-                refreshTimer.Restart();
-            }
-            Console.Clear();
-            // Get the updated securities and total value
-            List<Modules.DisplayedSecurity> securities = db.GetDisplayedSecurities();
-            int totalValue = calculateTotal(securities);
-
-            double change = calculateChange_percent(securities);
-            double priceChange = calculateChange_price(securities);
-            Console.ForegroundColor = (change >= 0) ? ConsoleColor.Green : ConsoleColor.Red;
-            // Display the portfolio information
-            Console.WriteLine($"Total portfolio value: ${totalValue}");
-            Console.WriteLine($"Change: {change}% ${Math.Abs(priceChange)}\n");
-            Console.ResetColor();
-
-            Console.WriteLine("Displaying portfolio");
-            displayAllocations(securities, totalValue);
-            listAllHoldings(securities, totalValue);
-
-            if (Console.KeyAvailable)
-            {
-                // Read the key that was pressed
-                ConsoleKeyInfo key = Console.ReadKey(true);
-
-                // Check if the key was Enter
-                if (key.Key == ConsoleKey.Enter)
-                {
-                    break; // Exit the while loop
-                }
-            }
-            Thread.Sleep(100000);
+            db.updatePrices();
+            refreshTimer.Restart();
         }
+        Console.Clear();
+        // Get the updated securities and total value
+        List<Modules.DisplayedSecurity> securities = db.GetDisplayedSecurities();
+        int totalValue = calculateTotal(securities);
+
+        double change = calculateChange_percent(securities);
+        double priceChange = calculateChange_price(securities);
+        Console.ForegroundColor = (change >= 0) ? ConsoleColor.Green : ConsoleColor.Red;
+        // Display the portfolio information
+        Console.WriteLine($"Total portfolio value: ${totalValue}");
+        Console.WriteLine($"Change: {change}% ${Math.Abs(priceChange)}\n");
+        Console.ResetColor();
+
+        Console.WriteLine("Displaying portfolio");
+        displayAllocations(securities, totalValue);
+        listAllHoldings(securities, totalValue);
+        Console.SetCursorPosition(Console.WindowWidth - 6, Console.WindowHeight - 1);
+
+        // Print the "EXIT" message
+        Console.Write("(EXIT)");
+
+        // Wait for a key to be pressed
+        ConsoleKeyInfo key = Console.ReadKey(true);
+
+        // Check if the key was Enter or Escape
+        if (key.Key == ConsoleKey.Enter || key.Key == ConsoleKey.Escape)
+        {
+            break; // Exit the while loop
+        }
+
+        Thread.Sleep(100000);
+    }
+
     }
 }
 }
