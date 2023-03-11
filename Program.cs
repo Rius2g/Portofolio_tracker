@@ -80,7 +80,7 @@ public class Functions
             //Holdings
             //The program does the rest
         Console.Clear();
-        Console.WriteLine("Enter the type of security you want to add\n 1. Crypto\n 2. Stock\n 3. ETF\n 4. Mutual Fund\n 5. Index Fund\n 6. By ISI\n 7. Abort");
+        Console.WriteLine("Enter the type of security you want to add\n 1. Crypto\n 2. Stock\n 3. ETF\n 4. Mutual Fund\n 5. Index Fund\n 6. By ISI\n 7. Manual input\n 8. Abort");
         ConsoleKeyInfo key = Console.ReadKey(true);
 
         // Check if the key was Enter
@@ -90,9 +90,9 @@ public class Functions
             if (char.IsDigit(key.KeyChar))
             {
             type = int.Parse(key.KeyChar.ToString());
-            if (type < 1 || type > 6)
+            if (type < 1 || type >7)
             {
-                Console.WriteLine("Invalid type. Please enter a number between 1 and 6.");
+                Console.WriteLine("Invalid type. Please enter a number between 1 and 7.");
                 return;
             }
             else 
@@ -133,6 +133,7 @@ public class Functions
 
         public void Add_manual_Security()
         {
+            Console.Clear();
             Console.WriteLine("Adding manual security");
 
             Console.WriteLine("Enter the type of security you want to add\n 1. Crypto\n 2. Stock\n 3. ETF\n 4. Mutual Fund\n 5. Index Fund\n 6. Abort");
@@ -203,6 +204,7 @@ public class Functions
 
         public void PurgeDatabase()
         { //purges the database
+            Console.Clear();
             Console.WriteLine("Purging database");
             db.PurgeDatabase();
         }
@@ -353,7 +355,7 @@ public class Functions
 
     public async Task DisplayPortfolio()
     {
-        db.updatePrices();
+        // db.updatePrices();
         const int RefreshIntervalMinutes = 15;
 
         Stopwatch refreshTimer = new Stopwatch();
