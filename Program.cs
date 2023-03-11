@@ -87,44 +87,45 @@ public class Functions
         int type = 0;
         while (true)
         {
-        if (char.IsDigit(key.KeyChar))
-        {
-        type = int.Parse(key.KeyChar.ToString());
-        if (type < 1 || type > 6)
-        {
-            Console.WriteLine("Invalid type. Please enter a number between 1 and 6.");
-            return;
+            if (char.IsDigit(key.KeyChar))
+            {
+            type = int.Parse(key.KeyChar.ToString());
+            if (type < 1 || type > 6)
+            {
+                Console.WriteLine("Invalid type. Please enter a number between 1 and 6.");
+                return;
+            }
+            else 
+            {
+                Console.WriteLine("Enter the ticker:");
+                string? ticker = Console.ReadLine();
+
+                if (string.IsNullOrEmpty(ticker))
+                {
+                    Console.WriteLine("Invalid ticker. Please enter a valid ticker.");
+                    continue;
+                }
+
+                Console.WriteLine("Enter the holdings:");
+                int holdings;
+                if (!int.TryParse(Console.ReadLine(), out holdings))
+                {
+                    Console.WriteLine("Invalid holdings. Please enter a valid number.");
+                    continue;
+                }
+
+                Modules.Security security = new Modules.Security(ticker, holdings, type);
+                db.AddSecurity(security); //add the security to the database
+                break;
+            }
         }
-        else 
+        else
         {
-            Console.WriteLine("Enter the ticker:");
-            string? ticker = Console.ReadLine();
-
-            if (string.IsNullOrEmpty(ticker))
-            {
-                Console.WriteLine("Invalid ticker. Please enter a valid ticker.");
-                continue;
-            }
-
-            Console.WriteLine("Enter the holdings:");
-            int holdings;
-            if (!int.TryParse(Console.ReadLine(), out holdings))
-            {
-                Console.WriteLine("Invalid holdings. Please enter a valid number.");
-                continue;
-            }
-
-            Modules.Security security = new Modules.Security(ticker, holdings, type);
-            db.AddSecurity(security); //add the security to the database
-            break;
+            Console.WriteLine("Invalid input. Please enter a number between 1 and 6.");
+        }
+        
         }
     }
-    else
-    {
-        Console.WriteLine("Invalid input. Please enter a number between 1 and 6.");
-    }
-}
-        }
 
         public void UpdateSecurity()
         { //updates a securiy to the database/portofolio
@@ -215,47 +216,47 @@ public class Functions
             }
          }
 
-       public void displayAllocations(List<Modules.DisplayedSecurity> securities, int total)
-{
-    Dictionary<int, int> allocation = new Dictionary<int, int>();
-
-    foreach (var security in securities)
+    public void displayAllocations(List<Modules.DisplayedSecurity> securities, int total)
     {
-        int value = (int)Math.Round(security.Price * security.Quantity);
+        Dictionary<int, int> allocation = new Dictionary<int, int>();
 
-        if (allocation.ContainsKey(security.Type))
+        foreach (var security in securities)
         {
-            allocation[security.Type] += value;
+            int value = (int)Math.Round(security.Price * security.Quantity);
+
+            if (allocation.ContainsKey(security.Type))
+            {
+                allocation[security.Type] += value;
+            }
+            else
+            {
+                allocation.Add(security.Type, value);
+            }
         }
-        else
+
+        if (total == 0)
         {
-            allocation.Add(security.Type, value);
+            Console.WriteLine("No holdings to display.");
+            return;
         }
+
+        Dictionary<int, double> allocationPct = new Dictionary<int, double>();
+        foreach (var item in allocation)
+        {
+            double pct = (double)item.Value / total * 100;
+            allocationPct.Add(item.Key, pct);
+        }
+
+        Console.WriteLine($"Crypto: {allocationPct.GetValueOrDefault(1, 0):0.00}%");
+        Console.WriteLine($"Stock: {allocationPct.GetValueOrDefault(2, 0):0.00}%");
+        Console.WriteLine($"ETF: {allocationPct.GetValueOrDefault(3, 0):0.00}%");
+        Console.WriteLine($"Mutual Fund: {allocationPct.GetValueOrDefault(4, 0):0.00}%");
+        Console.WriteLine($"Index Fund: {allocationPct.GetValueOrDefault(5, 0):0.00}%");
     }
 
-    if (total == 0)
-    {
-        Console.WriteLine("No holdings to display.");
-        return;
-    }
-
-    Dictionary<int, double> allocationPct = new Dictionary<int, double>();
-    foreach (var item in allocation)
-    {
-        double pct = (double)item.Value / total * 100;
-        allocationPct.Add(item.Key, pct);
-    }
-
-    Console.WriteLine($"Crypto: {allocationPct.GetValueOrDefault(1, 0):0.00}%");
-    Console.WriteLine($"Stock: {allocationPct.GetValueOrDefault(2, 0):0.00}%");
-    Console.WriteLine($"ETF: {allocationPct.GetValueOrDefault(3, 0):0.00}%");
-    Console.WriteLine($"Mutual Fund: {allocationPct.GetValueOrDefault(4, 0):0.00}%");
-    Console.WriteLine($"Index Fund: {allocationPct.GetValueOrDefault(5, 0):0.00}%");
-}
 
 
-
-  public double calculateChange_percent(List<Modules.DisplayedSecurity> securities)
+    public double calculateChange_percent(List<Modules.DisplayedSecurity> securities)
     {
     // Calculate the total value of the portfolio
     double totalValue = calculateTotal(securities);
@@ -290,65 +291,66 @@ public class Functions
 
 
     public async Task DisplayPortfolio()
-{
-    const int RefreshIntervalMinutes = 15;
-
-    Stopwatch refreshTimer = new Stopwatch();
-    refreshTimer.Start();
-
-    // Get the display currency from user input
-    Console.WriteLine("Enter the currency you would like to display the portfolio in: ");
-    string currencyCode = Console.ReadLine();
-    decimal currencyRate = await get.GetCurrencyExchangeRate("USD", currencyCode);
-
-    while (true)
     {
-        // Check if it's time to refresh the prices
-        if (refreshTimer.Elapsed.TotalMinutes >= RefreshIntervalMinutes)
+        db.updatePrices();
+        const int RefreshIntervalMinutes = 15;
+
+        Stopwatch refreshTimer = new Stopwatch();
+        refreshTimer.Start();
+
+        // Get the display currency from user input
+        Console.WriteLine("Enter the currency you would like to display the portfolio in: ");
+        string currencyCode = Console.ReadLine();
+        decimal currencyRate = await get.GetCurrencyExchangeRate("USD", currencyCode);
+
+        while (true)
         {
-            db.updatePrices();
-            refreshTimer.Restart();
+            // Check if it's time to refresh the prices
+            if (refreshTimer.Elapsed.TotalMinutes >= RefreshIntervalMinutes)
+            {
+                db.updatePrices();
+                refreshTimer.Restart();
+            }
+
+            Console.Clear();
+
+            // Get the updated securities and total value
+            List<Modules.DisplayedSecurity> securities = db.GetDisplayedSecurities();
+            int totalValue = calculateTotal(securities);
+
+            // Convert the total value to the selected currency
+            decimal totalValueInCurrency = totalValue * currencyRate;
+
+            double change = calculateChange_percent(securities);
+            decimal priceChange = Convert.ToDecimal(calculateChange_price(securities)) * Convert.ToDecimal(currencyRate);
+            Console.ForegroundColor = (change >= 0) ? ConsoleColor.Green : ConsoleColor.Red;
+
+            // Display the portfolio information
+            Console.WriteLine($"Total portfolio value: {currencyCode} {totalValueInCurrency.ToString("N2")}");
+            Console.WriteLine($"Change: {change}% {currencyCode} {Math.Abs(priceChange):0.00}\n");
+
+            Console.ResetColor();
+
+            Console.WriteLine("Displaying portfolio");
+            displayAllocations(securities, totalValue);
+            listAllHoldings(securities, currencyRate, currencyCode);
+            Console.SetCursorPosition(Console.WindowWidth - 6, Console.WindowHeight - 1);
+
+            // Print the "EXIT" message
+            Console.Write("(EXIT)");
+
+            // Wait for a key to be pressed
+            ConsoleKeyInfo key = Console.ReadKey(true);
+
+            // Check if the key was Enter or Escape
+            if (key.Key == ConsoleKey.Enter || key.Key == ConsoleKey.Escape)
+            {
+                break; // Exit the while loop
+            }
+
+            Thread.Sleep(1000);
         }
-
-        Console.Clear();
-
-        // Get the updated securities and total value
-        List<Modules.DisplayedSecurity> securities = db.GetDisplayedSecurities();
-        int totalValue = calculateTotal(securities);
-
-        // Convert the total value to the selected currency
-        decimal totalValueInCurrency = totalValue * currencyRate;
-
-        double change = calculateChange_percent(securities);
-        decimal priceChange = Convert.ToDecimal(calculateChange_price(securities)) * Convert.ToDecimal(currencyRate);
-        Console.ForegroundColor = (change >= 0) ? ConsoleColor.Green : ConsoleColor.Red;
-
-        // Display the portfolio information
-        Console.WriteLine($"Total portfolio value: {currencyCode} {totalValueInCurrency.ToString("N2")}");
-        Console.WriteLine($"Change: {change}% {currencyCode} {Math.Abs(priceChange):0.00}\n");
-
-        Console.ResetColor();
-
-        Console.WriteLine("Displaying portfolio");
-        displayAllocations(securities, totalValue);
-        listAllHoldings(securities, currencyRate, currencyCode);
-        Console.SetCursorPosition(Console.WindowWidth - 6, Console.WindowHeight - 1);
-
-        // Print the "EXIT" message
-        Console.Write("(EXIT)");
-
-        // Wait for a key to be pressed
-        ConsoleKeyInfo key = Console.ReadKey(true);
-
-        // Check if the key was Enter or Escape
-        if (key.Key == ConsoleKey.Enter || key.Key == ConsoleKey.Escape)
-        {
-            break; // Exit the while loop
-        }
-
-        Thread.Sleep(1000);
     }
-}
 
 }
 }
