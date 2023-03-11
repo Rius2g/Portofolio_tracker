@@ -191,10 +191,12 @@ public class Functions
 
         public void UpdateSecurity()
         { //updates a securiy to the database/portofolio
+            //do some database stuff here
             Console.WriteLine("Update security");
         }
         public void RemoveSecurity()
         { //removes a securiy to the database/portofolio
+        //easy db stuff
             Console.WriteLine("Remove security");
         }
         public void Exit()
@@ -355,7 +357,6 @@ public class Functions
 
     public async Task DisplayPortfolio()
     {
-        // db.updatePrices();
         const int RefreshIntervalMinutes = 15;
 
         Stopwatch refreshTimer = new Stopwatch();
@@ -365,6 +366,7 @@ public class Functions
         Console.WriteLine("Enter the currency you would like to display the portfolio in: ");
         string currencyCode = Console.ReadLine();
         decimal currencyRate = await get.GetCurrencyExchangeRate("USD", currencyCode);
+        db.updatePrices(); //this function just breaks the program???
 
         while (true)
         {

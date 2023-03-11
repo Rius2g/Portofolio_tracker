@@ -139,7 +139,7 @@ namespace Database //do all the setup and functions for database
             connection.Close();
         }
 
-        public async void UpdateSecurity(Modules.Security security)
+        public async void UpdateSecurity(Modules.DisplayedSecurity security)
         {
             double price = 0;
             double change = 0;
@@ -186,22 +186,30 @@ namespace Database //do all the setup and functions for database
 
             // Open the connection:
             connection.Open();
-
+            
+            DateTime date = DateTime.Now;
+            DateTime time = DateTime.Now;
             // Update some data:
             var updateCommand = connection.CreateCommand();
-            updateCommand.CommandText = "UPDATE Securities SET Price = " + price + ", Quantity = " + security.Quantity + ", Date = '" + security.Date + "', Time = '" + security.Time + "', Type = '" + security.Type + "' WHERE Ticker = '" + security.Ticker + "'";
+            updateCommand.CommandText = "UPDATE Securities SET Price = " + price + ", Quantity = " + security.Quantity + ", Date = '" + date + "', Time = '" + time + "', Type = '" + security.Type + "' WHERE Ticker = '" + security.Ticker + "'";
             updateCommand.ExecuteNonQuery();
 
             // Close the connection:
             connection.Close();
         }
 
-        public void UpdateSecurities(List<Modules.Security> securities)
+        public void UpdateSecurities(List<Modules.DisplayedSecurity> securities)
         {
-           foreach (Modules.Security security in securities)
+            Console.WriteLine("HEIA");
+            foreach (Modules.DisplayedSecurity security in securities)
             {
+                if (security.Type != 4)
+                {
                 UpdateSecurity(security);
+                }
+                
             }
+            return;
         }
 
         public int typeToInt(string type)
@@ -281,38 +289,13 @@ namespace Database //do all the setup and functions for database
             }
         }
 
-        public List<Modules.Security> GetSecurities()
-        {
-            // Create a new database connection:
-            var connectionStringBuilder = new SqliteConnectionStringBuilder();
-            connectionStringBuilder.DataSource = "Holdings.db";
-            var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
-
-            // Open the connection:
-            connection.Open();
-
-            // Read some data:
-            var selectCommand = connection.CreateCommand();
-            selectCommand.CommandText = "SELECT Ticker, Price, Quantity, Change, Date, Time, Type FROM Securities";
-            using (var reader = selectCommand.ExecuteReader())
-            {
-                List<Modules.Security> securities = new List<Modules.Security>();
-                while (reader.Read())
-                {
-                    Modules.Security security = new Modules.Security(reader.GetString(0), reader.GetInt16(2), reader.GetInt16(6));
-                    security.Date = reader.GetDateTime(4);
-                    security.Time = reader.GetDateTime(5);
-                    security.Price = reader.GetFloat(1);
-                    security.Change = reader.GetFloat(3);
-                }
-                return securities;
-            }
-        }
-
         public void updatePrices()
         {
-            List<Modules.Security> securities = GetSecurities();
-            UpdateSecurities(securities);
+            Console.Clear();
+            List<Modules.DisplayedSecurity> securities = GetDisplayedSecurities();
+            Console.WriteLine(securities.Count);
+            // UpdateSecurities(securities);
+            return;
         }
     }
 
