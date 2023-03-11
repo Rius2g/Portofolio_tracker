@@ -190,14 +190,85 @@ public class Functions
         }
 
         public void UpdateSecurity()
-        { //updates a securiy to the database/portofolio
-            //do some database stuff here
-            Console.WriteLine("Update security");
+        {
+            Console.Clear();
+            Console.WriteLine("Update security: Enter ticker");
+            string? ticker = Console.ReadLine();
+            if(string.IsNullOrEmpty(ticker))
+            {
+                Console.WriteLine("Invalid ticker. Please enter a valid ticker.");
+                return;
+            }
+            Console.WriteLine("What do you want to update?\n 1. Holdings\n 2. Price\n 3. Both");
+            ConsoleKeyInfo key = Console.ReadKey(true);
+            if (char.IsDigit(key.KeyChar))
+            {
+                int option = int.Parse(key.KeyChar.ToString());
+                if(option == 1)
+                {
+                    Console.Clear();
+                    Console.WriteLine("Enter the new holdings:");
+                    int holdings;
+                    if (!int.TryParse(Console.ReadLine(), out holdings))
+                    {
+                        Console.WriteLine("Invalid holdings. Please enter a valid number.");
+                        return;
+                    }
+                    db.UpdateHoldings(ticker, holdings);
+                }
+                else if(option == 2)
+                {
+                    Console.Clear();
+                    Console.WriteLine("Enter the new price:");
+                    decimal price;
+                    if (!decimal.TryParse(Console.ReadLine(), out price))
+                    {
+                        Console.WriteLine("Invalid price. Please enter a valid number.");
+                        return;
+                    }
+                    db.UpdatePrice(ticker, price);
+                }
+                else if(option == 3)
+                {
+                    Console.Clear();
+                    Console.WriteLine("Enter the new holdings:");
+                    int holdings;
+                    if (!int.TryParse(Console.ReadLine(), out holdings))
+                    {
+                        Console.WriteLine("Invalid holdings. Please enter a valid number.");
+                        return;
+                    }
+                    Console.WriteLine("Enter the new price:");
+                    decimal price;
+                    if (!decimal.TryParse(Console.ReadLine(), out price))
+                    {
+                        Console.WriteLine("Invalid price. Please enter a valid number.");
+                        return;
+                    }
+                    db.UpdateHoldings(ticker, holdings);
+                    db.UpdatePrice(ticker, price);
+                    return;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input. Please enter a number between 1 and 3.");
+                    return;
+                }
+            }
         }
         public void RemoveSecurity()
         { //removes a securiy to the database/portofolio
         //easy db stuff
-            Console.WriteLine("Remove security");
+            Console.Clear();
+            Console.WriteLine("Remove security: Enter ticker");
+            string? ticker = Console.ReadLine();
+            if(string.IsNullOrEmpty(ticker))
+            {
+                Console.WriteLine("Invalid ticker. Please enter a valid ticker.");
+                return;
+            }
+
+            db.RemoveSecurity(ticker);
         }
         public void Exit()
         { //exits the program

@@ -139,6 +139,44 @@ namespace Database //do all the setup and functions for database
             connection.Close();
         }
 
+        public void UpdatePrice(string ticker, decimal newprice)
+        {
+            // Create a new database connection:
+            var connectionStringBuilder = new SqliteConnectionStringBuilder();
+            connectionStringBuilder.DataSource = "Holdings.db";
+            var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
+
+            // Open the connection:
+            connection.Open();
+
+            // Update some data:
+            var updateCommand = connection.CreateCommand();
+            updateCommand.CommandText = "UPDATE Securities SET Price = '" + newprice + "' WHERE Ticker = '" + ticker + "'";
+            updateCommand.ExecuteNonQuery();
+
+            // Close the connection:
+            connection.Close();
+        }
+
+        public void UpdateHoldings(string ticker, int newHoldings)
+        {
+            // Create a new database connection:
+            var connectionStringBuilder = new SqliteConnectionStringBuilder();
+            connectionStringBuilder.DataSource = "Holdings.db";
+            var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
+
+            // Open the connection:
+            connection.Open();
+
+            // Update some data:
+            var updateCommand = connection.CreateCommand();
+            updateCommand.CommandText = "UPDATE Securities SET Quantity = '" + newHoldings + "' WHERE Ticker = '" + ticker + "'";
+            updateCommand.ExecuteNonQuery();
+
+            // Close the connection:
+            connection.Close();
+        }
+
         public async void UpdateSecurity(Modules.DisplayedSecurity security)
         {
             double price = 0;
@@ -210,6 +248,24 @@ namespace Database //do all the setup and functions for database
                 
             }
             return;
+        }
+
+        public void RemoveSecurity(string ticker)
+        {
+            var ConnectionString = "Data Source=Holdings.db";
+            using (var connection = new SqliteConnection(ConnectionString))
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = "DELETE FROM Securities WHERE Ticker = '" + ticker + "'";
+                        command.ExecuteNonQuery();
+                    }
+                    transaction.Commit();
+                }
+            }
         }
 
         public int typeToInt(string type)
