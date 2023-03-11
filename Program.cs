@@ -39,12 +39,11 @@ namespace ConsoleApplication
             }
         }
         }
-    }
-             
+    }        
 public class Functions
 {
         public Database.Database db = new Database.Database();
-
+        public API.Get get = new API.Get();
 
         public int Menu()
         {
@@ -157,36 +156,45 @@ public class Functions
 
         }
 
-        public void listAllHoldings(List<Modules.DisplayedSecurity> securities, int total)
-        {
-        Console.WriteLine("\nHoldings:\n");
-        Console.WriteLine("{0,-10} {1,-10} {2,-10} {3,-10} {4,-10} {5,-10}", "Ticker", "Quantity", "Price", "Value", "Change", "Percentage");
+    public void listAllHoldings(List<Modules.DisplayedSecurity> securities, decimal priceInCurrency, string currencyCode)
+    {
+        CultureInfo cultureInfo = CultureInfo.GetCultureInfo(currencyCode);
+
+        Console.WriteLine($"\nHoldings displayed in {currencyCode}:\n");
+        Console.WriteLine("{0,-10} {1,-10} {2,-15} {3,-15} {4,-10} {5,-10}", "Ticker", "Quantity", "Price", "Value", "Change", "Percentage");
+
+        decimal totalValue = calculateTotal(securities) * priceInCurrency;
+
         for (int i = 0; i < securities.Count; i++)
         {
-            int value = (int)Math.Round(securities[i].Price * securities[i].Quantity);
-            double percentage = (double)value / total * 100;
-            string changeString = $"{securities[i].Change}%";
-            string priceString = $"${value}";
+            decimal value = (decimal)securities[i].Price * securities[i].Quantity / priceInCurrency;
+            decimal price = Math.Round((decimal)securities[i].Price * priceInCurrency, 2);
+            string priceS = string.Format(cultureInfo, "{0:C}", price);
+            decimal valueInCurrency = priceInCurrency * (decimal)securities[i].Quantity * (decimal)securities[i].Price;
+            string valueS = valueInCurrency.ToString("C", cultureInfo);
+            decimal percentage = valueInCurrency / totalValue * 100;
+            decimal change = (decimal)securities[i].Change;
+            string changeString;
 
             // Change the color of the Change and Price columns based on the sign of the change
-            if (securities[i].Change >= 0)
+            if (change >= 0)
             {
                 Console.ForegroundColor = ConsoleColor.Green;
-                changeString = $"+{securities[i].Change}%";
-                priceString = $"${value.ToString("#;-#;0")}";
+                changeString = $"+{change.ToString("N2")}%";
             }
             else
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                priceString = $"${value.ToString("0;-#;0")}";
+                changeString = $"{change.ToString("N2")}%";
             }
 
-            Console.WriteLine("{0,-10} {1,-10} {2,-10} {3,-10} {4,-10} {5,-10}", securities[i].Ticker, securities[i].Quantity, securities[i].Price, priceString, changeString, Math.Round(percentage, 2) + "%");
+            Console.WriteLine("{0,-10} {1,-10} {2,-15} {3,-15} {4,-10} {5,-10}", securities[i].Ticker, securities[i].Quantity, priceS, valueS, changeString, Math.Round(percentage, 2) + "%");
 
             Console.ResetColor();
         }
-        Console.WriteLine();
-        }
+    }
+
+
 
         public string returnType(int type)
          { //returns the type of security
@@ -207,53 +215,44 @@ public class Functions
             }
          }
 
-        public void displayAllocations(List<Modules.DisplayedSecurity> securities, int total)
+       public void displayAllocations(List<Modules.DisplayedSecurity> securities, int total)
+{
+    Dictionary<int, int> allocation = new Dictionary<int, int>();
+
+    foreach (var security in securities)
+    {
+        int value = (int)Math.Round(security.Price * security.Quantity);
+
+        if (allocation.ContainsKey(security.Type))
         {
-            int crypto = 0;
-            int stock = 0;
-            int etf = 0;
-            int mutual = 0;
-            int index = 0;
-
-            for (int i = 0; i < securities.Count; i++)
-            {
-                int value = (int)Math.Round(securities[i].Price * securities[i].Quantity);
-                switch (securities[i].Type)
-                {
-                    case 1:
-                        crypto += value;
-                        break;
-                    case 2:
-                        stock += value;
-                        break;
-                    case 3:
-                        etf += value;
-                        break;
-                    case 4:
-                        mutual += value;
-                        break;
-                    case 5:
-                        index += value;
-                        break;
-                }
-            }
-            if(total == 0)
-            {
-                Console.WriteLine("No holdings to display.");
-                return;
-            }
-            crypto = crypto / total * 100;
-            stock = stock / total * 100;
-            etf = etf / total * 100;
-            mutual = mutual / total * 100;
-            index = index / total * 100;
-
-            Console.WriteLine($"Crypto: {crypto.ToString("0.00")}%");
-            Console.WriteLine($"Stock: {stock.ToString("0.00")}%");
-            Console.WriteLine($"ETF: {etf.ToString("0.00")}%");
-            Console.WriteLine($"Mutual Fund: {mutual.ToString("0.00")}%");
-            Console.WriteLine($"Index Fund: {index.ToString("0.00")}%");
+            allocation[security.Type] += value;
         }
+        else
+        {
+            allocation.Add(security.Type, value);
+        }
+    }
+
+    if (total == 0)
+    {
+        Console.WriteLine("No holdings to display.");
+        return;
+    }
+
+    Dictionary<int, double> allocationPct = new Dictionary<int, double>();
+    foreach (var item in allocation)
+    {
+        double pct = (double)item.Value / total * 100;
+        allocationPct.Add(item.Key, pct);
+    }
+
+    Console.WriteLine($"Crypto: {allocationPct.GetValueOrDefault(1, 0):0.00}%");
+    Console.WriteLine($"Stock: {allocationPct.GetValueOrDefault(2, 0):0.00}%");
+    Console.WriteLine($"ETF: {allocationPct.GetValueOrDefault(3, 0):0.00}%");
+    Console.WriteLine($"Mutual Fund: {allocationPct.GetValueOrDefault(4, 0):0.00}%");
+    Console.WriteLine($"Index Fund: {allocationPct.GetValueOrDefault(5, 0):0.00}%");
+}
+
 
 
   public double calculateChange_percent(List<Modules.DisplayedSecurity> securities)
@@ -290,16 +289,17 @@ public class Functions
     }
 
 
-    public void DisplayPortfolio()
-    {
-        const int RefreshIntervalMinutes = 15;
+    public async Task DisplayPortfolio()
+{
+    const int RefreshIntervalMinutes = 15;
 
     Stopwatch refreshTimer = new Stopwatch();
     refreshTimer.Start();
 
-    //displays the portfolio
-    Console.Clear();
-    Console.WriteLine();
+    // Get the display currency from user input
+    Console.WriteLine("Enter the currency you would like to display the portfolio in: ");
+    string currencyCode = Console.ReadLine();
+    decimal currencyRate = await get.GetCurrencyExchangeRate("USD", currencyCode);
 
     while (true)
     {
@@ -309,22 +309,29 @@ public class Functions
             db.updatePrices();
             refreshTimer.Restart();
         }
+
         Console.Clear();
+
         // Get the updated securities and total value
         List<Modules.DisplayedSecurity> securities = db.GetDisplayedSecurities();
         int totalValue = calculateTotal(securities);
 
+        // Convert the total value to the selected currency
+        decimal totalValueInCurrency = totalValue * currencyRate;
+
         double change = calculateChange_percent(securities);
-        double priceChange = calculateChange_price(securities);
+        decimal priceChange = Convert.ToDecimal(calculateChange_price(securities)) * Convert.ToDecimal(currencyRate);
         Console.ForegroundColor = (change >= 0) ? ConsoleColor.Green : ConsoleColor.Red;
+
         // Display the portfolio information
-        Console.WriteLine($"Total portfolio value: ${totalValue}");
-        Console.WriteLine($"Change: {change}% ${Math.Abs(priceChange)}\n");
+        Console.WriteLine($"Total portfolio value: {currencyCode} {totalValueInCurrency.ToString("N2")}");
+        Console.WriteLine($"Change: {change}% {currencyCode} {Math.Abs(priceChange):0.00}\n");
+
         Console.ResetColor();
 
         Console.WriteLine("Displaying portfolio");
         displayAllocations(securities, totalValue);
-        listAllHoldings(securities, totalValue);
+        listAllHoldings(securities, currencyRate, currencyCode);
         Console.SetCursorPosition(Console.WindowWidth - 6, Console.WindowHeight - 1);
 
         // Print the "EXIT" message
@@ -339,10 +346,10 @@ public class Functions
             break; // Exit the while loop
         }
 
-        Thread.Sleep(100000);
+        Thread.Sleep(1000);
     }
+}
 
-    }
 }
 }
 

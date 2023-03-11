@@ -137,9 +137,21 @@ namespace API
         {
             throw new Exception("Failed to parse mutual fund price.");
         }
-
         }
-        
+
+        public async Task<decimal> GetCurrencyExchangeRate(string fromCurrency, string toCurrency)
+        {
+            var apiUrl = $"https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency={fromCurrency}&to_currency={toCurrency}&apikey={API_KEY}";
+
+            using var httpClient = new HttpClient();
+            var response = await httpClient.GetAsync(apiUrl);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var responseData = JObject.Parse(responseContent)["Realtime Currency Exchange Rate"];
+
+            var exchangeRate = responseData.Value<decimal>("5. Exchange Rate");
+
+            return exchangeRate;
+        }
     }
 
 }
