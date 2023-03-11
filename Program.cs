@@ -83,7 +83,7 @@ public class Functions
         Console.WriteLine("Enter the type of security you want to add\n 1. Crypto\n 2. Stock\n 3. ETF\n 4. Mutual Fund\n 5. Index Fund\n 6. By ISI\n 7. Abort");
         ConsoleKeyInfo key = Console.ReadKey(true);
 
-// Check if the key was Enter
+        // Check if the key was Enter
         int type = 0;
         while (true)
         {
@@ -97,6 +97,11 @@ public class Functions
             }
             else 
             {
+                if(type == 7)
+                {
+                    Add_manual_Security();
+                    break;
+                }
                 Console.WriteLine("Enter the ticker:");
                 string? ticker = Console.ReadLine();
 
@@ -123,9 +128,65 @@ public class Functions
         {
             Console.WriteLine("Invalid input. Please enter a number between 1 and 6.");
         }
-        
         }
-    }
+        }
+
+        public void Add_manual_Security()
+        {
+            Console.WriteLine("Adding manual security");
+
+            Console.WriteLine("Enter the type of security you want to add\n 1. Crypto\n 2. Stock\n 3. ETF\n 4. Mutual Fund\n 5. Index Fund\n 6. Abort");
+            ConsoleKeyInfo key = Console.ReadKey(true);
+
+            // Check if the key was Enter
+            int type = 0;
+
+            if (char.IsDigit(key.KeyChar))
+            {
+                type = int.Parse(key.KeyChar.ToString());
+                if (type < 1 || type > 6)
+                {
+                    Console.WriteLine("Invalid type. Please enter a number between 1 and 6.");
+                    return;
+                }
+                else
+                {
+                    Console.WriteLine("Enter the ticker:");
+                    string? ticker = Console.ReadLine();
+
+                    if (string.IsNullOrEmpty(ticker))
+                    {
+                        Console.WriteLine("Invalid ticker. Please enter a valid ticker.");
+                        return;
+                    }
+
+                    Console.WriteLine("Enter the holdings:");
+                    int holdings;
+                    if (!int.TryParse(Console.ReadLine(), out holdings))
+                    {
+                        Console.WriteLine("Invalid holdings. Please enter a valid number.");
+                        return;
+                    }
+
+                    Console.WriteLine("Enter the price:");
+                    float price;
+                    if (!float.TryParse(Console.ReadLine(), out price))
+                    {
+                        Console.WriteLine("Invalid price. Please enter a valid number.");
+                        return;
+                    }
+
+
+                    Modules.Security security = new Modules.Security(ticker, holdings, type);
+                    security.Price = price;
+                    db.Add_manual_Security(security); //add the security to the database
+                }
+            }
+            else
+            {
+                Console.WriteLine("Invalid input. Please enter a number between 1 and 6.");
+            }
+        }
 
         public void UpdateSecurity()
         { //updates a securiy to the database/portofolio

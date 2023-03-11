@@ -35,71 +35,90 @@ namespace Database //do all the setup and functions for database
             }
         }
 
-       public async void AddSecurity(Modules.Security security)
-{
-    // Create a new database connection:
-    var connectionStringBuilder = new SqliteConnectionStringBuilder();
-    connectionStringBuilder.DataSource = "Holdings.db";
-    var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
-    double price = 0;
-    double change = 0;
-    string name = "";
-    DateTime date = DateTime.Now;
-    DateTime time = DateTime.Now;
+        public async void AddSecurity(Modules.Security security)
+        {
+            // Create a new database connection:
+            var connectionStringBuilder = new SqliteConnectionStringBuilder();
+            connectionStringBuilder.DataSource = "Holdings.db";
+            var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
+            double price = 0;
+            double change = 0;
+            string name = "";
+            DateTime date = DateTime.Now;
+            DateTime time = DateTime.Now;
 
-    //fetch the price of the security
-    if (security.Type == 1) //crypto
-    {
-        var result = await api.GetCryptoPriceAndPercentChange(security.Ticker);
-        name = result.Item1;
-        price = result.Item2;
-        change = result.Item3;
-    }
-    else if (security.Type == 2 || security.Type == 3) //stock, etf, index fund
-    {
-        var result = await api.GetStockPriceAndPercentChange(security.Ticker);
-        name = result.Item1;
-        price = result.Item2;
-        change = result.Item3;
-    }
-    else if (security.Type == 5) //mutual fund
-    {
-        var result = await api.GetMutualFundPrice(security.Ticker);
-        name = result.Item1;
-        price = result.Item2;
-        change = result.Item3;
-    }
-    else if (security.Type == 6) //by ISIN
-    {
-        var result = await api.GetStockPriceAndPercentChangeByISIN(security.Ticker);
-        name = result.Item1;
-        price = result.Item2;
-        change = result.Item3;
-    }
+            //fetch the price of the security
+            if (security.Type == 1) //crypto
+            {
+                var result = await api.GetCryptoPriceAndPercentChange(security.Ticker);
+                name = result.Item1;
+                price = result.Item2;
+                change = result.Item3;
+            }
+            else if (security.Type == 2 || security.Type == 3) //stock, etf, index fund
+            {
+                var result = await api.GetStockPriceAndPercentChange(security.Ticker);
+                name = result.Item1;
+                price = result.Item2;
+                change = result.Item3;
+            }
+            else if (security.Type == 5) //mutual fund
+            {
+                var result = await api.GetMutualFundPrice(security.Ticker);
+                name = result.Item1;
+                price = result.Item2;
+                change = result.Item3;
+            }
+            else if (security.Type == 6) //by ISIN
+            {
+                var result = await api.GetStockPriceAndPercentChangeByISIN(security.Ticker);
+                name = result.Item1;
+                price = result.Item2;
+                change = result.Item3;
+            }
 
-    // Convert the change to a string with two decimal places, and replace the comma with a period:
-    string changeString = change.ToString("0.00", CultureInfo.InvariantCulture).Replace(',', '.');
+            // Convert the change to a string with two decimal places, and replace the comma with a period:
+            string changeString = change.ToString("0.00", CultureInfo.InvariantCulture).Replace(',', '.');
 
-    // Try to parse the change value with the correct format:
-    if (double.TryParse(changeString, NumberStyles.Any, CultureInfo.InvariantCulture, out double changeValue))
-    {
-        change = changeValue;
-    }
+            // Try to parse the change value with the correct format:
+            if (double.TryParse(changeString, NumberStyles.Any, CultureInfo.InvariantCulture, out double changeValue))
+            {
+                change = changeValue;
+            }
 
-    // Convert the price to a string, and replace the comma with a period:
-    string priceString = price.ToString("0.00", CultureInfo.InvariantCulture).Replace(',', '.');
+            // Convert the price to a string, and replace the comma with a period:
+            string priceString = price.ToString("0.00", CultureInfo.InvariantCulture).Replace(',', '.');
 
-    // Open the connection:
-    connection.Open();
+            // Open the connection:
+            connection.Open();
 
-    // Insert some data:
-    var insertCommand = connection.CreateCommand();
-    insertCommand.CommandText = "INSERT INTO Securities (Ticker, Name, Price, Quantity, Change, Date, Time, Type) VALUES ('" + security.Ticker + "', '" + name + "', '" + priceString + "', '" + security.Quantity + "', '" + changeString + "', '" + date.ToString("yyyy-MM-dd") + "', '" + time.ToString("HH:mm") + "', '" + security.Type + "')";
-    insertCommand.ExecuteNonQuery();
+            // Insert some data:
+            var insertCommand = connection.CreateCommand();
+            insertCommand.CommandText = "INSERT INTO Securities (Ticker, Name, Price, Quantity, Change, Date, Time, Type) VALUES ('" + security.Ticker + "', '" + name + "', '" + priceString + "', '" + security.Quantity + "', '" + changeString + "', '" + date.ToString("yyyy-MM-dd") + "', '" + time.ToString("HH:mm") + "', '" + security.Type + "')";
+            insertCommand.ExecuteNonQuery();
 
-    // Close the connection:
-    connection.Close();
-}
+            // Close the connection:
+            connection.Close();
+        }
+
+        public void Add_manual_Security(Modules.Security security)
+        {
+            // Create a new database connection:
+            var connectionStringBuilder = new SqliteConnectionStringBuilder();
+            connectionStringBuilder.DataSource = "Holdings.db";
+            var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
+
+            // Open the connection:
+            connection.Open();
+
+            // Insert some data:
+            var insertCommand = connection.CreateCommand();
+            insertCommand.CommandText = "INSERT INTO Securities (Ticker, Name, Price, Quantity, Change, Date, Time, Type) VALUES ('" + security.Ticker + "', '" + "" + "', '" + security.Price + "', '" + security.Quantity + "', '" + 0 + "', '" + 0 + "', '" + 0 + "', '" + security.Type + "')";
+            insertCommand.ExecuteNonQuery();
+
+            // Close the connection:
+            connection.Close();
+        }
 
         public void DeleteSecurity(string ticker)
         {

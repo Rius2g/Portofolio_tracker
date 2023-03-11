@@ -27,45 +27,29 @@ namespace API
             return Tuple.Create(stockName, stockPrice, percentChange);
         }
 
-        public async Task<Tuple<string, double, double, string>> GetStockPriceAndPercentChangeByISIN(string isin)
-        {
-            var apiUrl = $"https://www.morningstar.no/no/funds/snapshot/snapshot.aspx?id={isin}";
+    public async Task<Tuple<string, double, double, string>> GetStockPriceAndPercentChangeByISIN(string isin)
+    {
+        var apiUrl = $"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={isin}&apikey={API_KEY}";
 
-            using var httpClient = new HttpClient();
-            var response = await httpClient.GetAsync(apiUrl);
-            var responseContent = await response.Content.ReadAsStringAsync();
+        using var httpClient = new HttpClient();
+        var response = await httpClient.GetAsync(apiUrl);
+        var responseContent = await response.Content.ReadAsStringAsync();
+        Console.WriteLine(responseContent);
 
-            // Extract name, price, previous close, and security type values from the HTML response
-            var nameStartTag = "<h1 class=\"heading1\">";
-            var nameEndTag = "</h1>";
-            var nameStartIndex = responseContent.IndexOf(nameStartTag) + nameStartTag.Length;
-            var nameEndIndex = responseContent.IndexOf(nameEndTag, nameStartIndex);
-            var name = responseContent.Substring(nameStartIndex, nameEndIndex - nameStartIndex);
+        // Parse the JSON response to extract the name, price, and previous close values
+        var json = JObject.Parse(responseContent);
+        var name = (string)json["Global Quote"]["01. symbol"];
+        var priceString = (string)json["Global Quote"]["05. price"];
+        var price = double.Parse(priceString, CultureInfo.InvariantCulture);
+        var previousCloseString = (string)json["Global Quote"]["08. previous close"];
+        var previousClose = double.Parse(previousCloseString, CultureInfo.InvariantCulture);
 
-            var priceStartTag = "<span id=\"MainContent_fundOverview_lblPrice\">";
-            var priceEndTag = "</span>";
-            var priceStartIndex = responseContent.IndexOf(priceStartTag) + priceStartTag.Length;
-            var priceEndIndex = responseContent.IndexOf(priceEndTag, priceStartIndex);
-            var priceString = responseContent.Substring(priceStartIndex, priceEndIndex - priceStartIndex);
-            var price = double.Parse(priceString, CultureInfo.InvariantCulture);
+        // Calculate the percent change
+        var percentChange = (price - previousClose) / previousClose * 100;
 
-            var prevCloseStartTag = "<span id=\"MainContent_fundOverview_lblPreviousClose\">";
-            var prevCloseEndTag = "</span>";
-            var prevCloseStartIndex = responseContent.IndexOf(prevCloseStartTag) + prevCloseStartTag.Length;
-            var prevCloseEndIndex = responseContent.IndexOf(prevCloseEndTag, prevCloseStartIndex);
-            var prevCloseString = responseContent.Substring(prevCloseStartIndex, prevCloseEndIndex - prevCloseStartIndex);
-            var previousClose = double.Parse(prevCloseString, CultureInfo.InvariantCulture);
+        return Tuple.Create(name, price, percentChange, "Stock");
+    }
 
-            var typeStartTag = "<td class=\"line heading leftColumn\">";
-            var typeEndTag = "</td>";
-            var typeStartIndex = responseContent.IndexOf(typeStartTag) + typeStartTag.Length;
-            var typeEndIndex = responseContent.IndexOf(typeEndTag, typeStartIndex);
-            var typeString = responseContent.Substring(typeStartIndex, typeEndIndex - typeStartIndex);
-            var type = HttpUtility.HtmlDecode(typeString).Trim();
-
-            var percentChange = (price - previousClose) / previousClose * 100;
-            return Tuple.Create(name, price, percentChange, type);
-        }
 
        public async Task<Tuple<string, double, double>> GetCryptoPriceAndPercentChange(string ticker)
        {
