@@ -236,6 +236,25 @@ namespace Database //do all the setup and functions for database
             connection.Close();
         }
 
+        public void AddSavingsAccount(Modules.Security security)
+        {
+            // Create a new database connection:
+            var connectionStringBuilder = new SqliteConnectionStringBuilder();
+            connectionStringBuilder.DataSource = "Holdings.db";
+            var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
+
+            // Open the connection:
+            connection.Open();
+
+            // Insert some data:
+            var insertCommand = connection.CreateCommand();
+            insertCommand.CommandText = "INSERT INTO Securities (Ticker, Name, Price, Quantity, Change, Date, Time, Type) VALUES ('" + security.Ticker + "', '" + security.Ticker + "', '" + security.Price + "', '" + security.Quantity + "', '" + 0 + "', '" + 0 + "', '" + 0 + "', '" + security.Type + "')";
+            insertCommand.ExecuteNonQuery();
+
+            // Close the connection:
+            connection.Close();
+        }
+
         public void UpdateSecurities(List<Modules.DisplayedSecurity> securities)
         {
             Console.WriteLine("HEIA");

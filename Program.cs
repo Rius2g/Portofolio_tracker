@@ -83,7 +83,7 @@ public class Functions
             //Holdings
             //The program does the rest
         Console.Clear();
-        Console.WriteLine("Enter the type of security you want to add\n 1. Crypto\n 2. Stock\n 3. ETF\n 4. Mutual Fund\n 5. Index Fund\n 6. By ISI\n 7. Manual input\n 8. Abort");
+        Console.WriteLine("Enter the type of security you want to add\n 1. Crypto\n 2. Stock\n 3. ETF\n 4. Mutual Fund\n 5. Index Fund\n 6. By ISI\n 7. Manual input\n 8. Savings account\n 9. Abort");
         ConsoleKeyInfo key = Console.ReadKey(true);
 
         // Check if the key was Enter
@@ -93,9 +93,9 @@ public class Functions
             if (char.IsDigit(key.KeyChar))
             {
             type = int.Parse(key.KeyChar.ToString());
-            if (type < 1 || type >7)
+            if (type < 1 || type >8)
             {
-                Console.WriteLine("Invalid type. Please enter a number between 1 and 7.");
+                Console.WriteLine("Invalid type. Please enter a number between 1 and 8.");
                 return;
             }
             else 
@@ -103,6 +103,11 @@ public class Functions
                 if(type == 7)
                 {
                     Add_manual_Security();
+                    break;
+                }
+                if(type == 8)
+                {
+                    AddSavingsAccount();
                     break;
                 }
                 Console.WriteLine("Enter the ticker:");
@@ -126,12 +131,44 @@ public class Functions
                 db.AddSecurity(security); //add the security to the database
                 break;
             }
+            }
+            else
+            {
+            Console.WriteLine("Invalid input. Please enter a number between 1 and 8.");
+            }
         }
-        else
+    }
+
+        public void AddSavingsAccount()
         {
-            Console.WriteLine("Invalid input. Please enter a number between 1 and 6.");
-        }
-        }
+            Console.Clear();
+            Console.WriteLine("Adding savings account");
+
+            int type = 8;
+
+            Console.WriteLine("Enter the name of the savings account:");
+            string? ticker = Console.ReadLine();
+
+            if (string.IsNullOrEmpty(ticker))
+            {
+                Console.WriteLine("Invalid name. Please enter a valid name.");
+                return;
+            }
+
+            Console.WriteLine("Enter the holdings:");
+            int holdings;
+
+            if (!int.TryParse(Console.ReadLine(), out holdings))
+            {
+                Console.WriteLine("Invalid holdings. Please enter a valid number.");
+                return;
+            }
+            
+            Modules.Security security = new Modules.Security(ticker, holdings, type);
+            security.Price = 1;
+            db.AddSavingsAccount(security); //add the security to the database
+
+
         }
 
         public void Add_manual_Security()
@@ -311,7 +348,7 @@ public class Functions
             decimal price = Math.Round((decimal)securities[i].Price * priceInCurrency, 2);
             string priceS = string.Format(cultureInfo, "{0:C}", price);
             decimal valueInCurrency = priceInCurrency * (decimal)securities[i].Quantity * (decimal)securities[i].Price;
-            string valueS = valueInCurrency.ToString("C", cultureInfo);
+            string valueS = string.Format(cultureInfo, "{0:# ### ###.00}", valueInCurrency);
             decimal percentage = valueInCurrency / totalValue * 100;
             decimal change = (decimal)securities[i].Change;
             string changeString;
@@ -355,7 +392,7 @@ public class Functions
             }
          }
 
-    public void displayAllocations(List<Modules.DisplayedSecurity> securities, int total)
+    public void DisplayAllocations(List<Modules.DisplayedSecurity> securities, int total)
     {
         Dictionary<int, int> allocation = new Dictionary<int, int>();
 
@@ -391,7 +428,9 @@ public class Functions
         Console.WriteLine($"ETF: {allocationPct.GetValueOrDefault(3, 0):0.00}%");
         Console.WriteLine($"Mutual Fund: {allocationPct.GetValueOrDefault(4, 0):0.00}%");
         Console.WriteLine($"Index Fund: {allocationPct.GetValueOrDefault(5, 0):0.00}%");
+        Console.WriteLine($"Savings account: {allocationPct.GetValueOrDefault(8, 0):0.00}%");
     }
+
 
 
 
@@ -435,7 +474,7 @@ public class Functions
 
             Stopwatch refreshTimer = new Stopwatch();
             refreshTimer.Start();
-
+            Console.Clear();
             // Get the display currency from user input
             Console.WriteLine("Enter the currency you would like to display the portfolio in: ");
             string currencyCode = Console.ReadLine();
@@ -471,7 +510,7 @@ public class Functions
                 Console.ResetColor();
 
                 Console.WriteLine("Displaying portfolio");
-                displayAllocations(securities, totalValue);
+                DisplayAllocations(securities, totalValue);
                 listAllHoldings(securities, currencyRate, currencyCode);
                 Console.SetCursorPosition(Console.WindowWidth - 6, Console.WindowHeight - 1);
 
@@ -482,7 +521,7 @@ public class Functions
                 ConsoleKeyInfo key = Console.ReadKey(true);
 
                 // Check if the key is intended for the DisplayPortfolio function
-                if (key.Key == ConsoleKey.Escape || key.Key == ConsoleKey.X)
+                if (key.Key == ConsoleKey.Escape || key.Key == ConsoleKey.X || key.Key  == ConsoleKey.Enter)
                 {
                     Console.WriteLine("HEIA");
                     // Exit the DisplayPortfolio function
