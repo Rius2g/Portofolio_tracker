@@ -7,14 +7,14 @@ namespace ConsoleApplication
 {
     class Program
     {
-        static void Main()
-        {
-        Functions f = new Functions();
-        while(true)
-        {
-        int option = f.Menu();
+    static async Task Main()
+    {
+    Functions f = new Functions();
+    while (true)
+    {
+        int option = await f.Menu();
         switch (option)
-            {
+        {
             case 1:
                 f.AddSecurity();
                 break;
@@ -25,7 +25,7 @@ namespace ConsoleApplication
                 f.RemoveSecurity();
                 break;
             case 4:
-                f.DisplayPortfolio();
+                await f.DisplayPortfolio();
                 break;
             case 5:
                 f.PurgeDatabase();
@@ -36,41 +36,44 @@ namespace ConsoleApplication
             default:
                 Console.WriteLine("Invalid option");
                 break;
-            }
         }
-        }
-    }        
+    }   
+    }
+
 public class Functions
 {
-        public Database.Database db = new Database.Database();
-        public API.Get get = new API.Get();
+    public Database.Database db = new Database.Database();
+    public API.Get get = new API.Get();
 
-        public int Menu()
+    public async Task<int> Menu()
+    {
+        Console.Clear();
+        Console.WriteLine("Select your wanted option");
+        Console.WriteLine("1. Add security");
+        Console.WriteLine("2. Update security");
+        Console.WriteLine("3. Remove security");
+        Console.WriteLine("4. Display portofolio");
+        Console.WriteLine("5. Purge database");
+        Console.WriteLine("6. Exit");
+
+        // Read the key that was pressed
+        ConsoleKeyInfo key = Console.ReadKey(true);
+
+        // Check if the key was Enter
+        if (char.IsDigit(key.KeyChar))
         {
-            Console.Clear();
-            Console.WriteLine("Select your wanted option");
-            Console.WriteLine("1. Add security");
-            Console.WriteLine("2. Update security");
-            Console.WriteLine("3. Remove security");
-            Console.WriteLine("4. Display portofolio");
-            Console.WriteLine("5. Purge database");
-            Console.WriteLine("6. Exit");
-           
-                    // Read the key that was pressed
-            ConsoleKeyInfo key = Console.ReadKey(true);
-
-                    // Check if the key was Enter
-            if (char.IsDigit(key.KeyChar))
-            {
             int number = int.Parse(key.KeyChar.ToString());
             return number;
-            }
-            else
-            {
-                Console.WriteLine("Invalid option");
-                return 6;
-            }
         }
+        else
+        {
+            Console.WriteLine("Invalid option");
+            return 6;
+        }
+    }
+
+    // Rest of the code remains the same
+
     public void AddSecurity()
     { //adds a securiy to the database/portofolio
         Console.WriteLine("Adding security");
@@ -426,68 +429,71 @@ public class Functions
     }
 
 
-    public async Task DisplayPortfolio()
-    {
-        const int RefreshIntervalMinutes = 15;
-
-        Stopwatch refreshTimer = new Stopwatch();
-        refreshTimer.Start();
-
-        // Get the display currency from user input
-        Console.WriteLine("Enter the currency you would like to display the portfolio in: ");
-        string currencyCode = Console.ReadLine();
-        decimal currencyRate = await get.GetCurrencyExchangeRate("USD", currencyCode);
-        db.updatePrices(); //this function just breaks the program???
-
-        while (true)
+        public async Task DisplayPortfolio()
         {
-            // Check if it's time to refresh the prices
-            if (refreshTimer.Elapsed.TotalMinutes >= RefreshIntervalMinutes)
+            const int RefreshIntervalMinutes = 15;
+
+            Stopwatch refreshTimer = new Stopwatch();
+            refreshTimer.Start();
+
+            // Get the display currency from user input
+            Console.WriteLine("Enter the currency you would like to display the portfolio in: ");
+            string currencyCode = Console.ReadLine();
+            decimal currencyRate = await get.GetCurrencyExchangeRate("USD", currencyCode);
+            db.updatePrices(); 
+
+            while (true)
             {
-                db.updatePrices();
-                refreshTimer.Restart();
+                // Check if it's time to refresh the prices
+                if (refreshTimer.Elapsed.TotalMinutes >= RefreshIntervalMinutes)
+                {
+                    db.updatePrices();
+                    refreshTimer.Restart();
+                }
+
+                Console.Clear();
+
+                // Get the updated securities and total value
+                List<Modules.DisplayedSecurity> securities = db.GetDisplayedSecurities();
+                int totalValue = calculateTotal(securities);
+
+                // Convert the total value to the selected currency
+                decimal totalValueInCurrency = totalValue * currencyRate;
+
+                double change = calculateChange_percent(securities);
+                decimal priceChange = Convert.ToDecimal(calculateChange_price(securities)) * Convert.ToDecimal(currencyRate);
+                Console.ForegroundColor = (change >= 0) ? ConsoleColor.Green : ConsoleColor.Red;
+
+                // Display the portfolio information
+                Console.WriteLine($"Total portfolio value: {currencyCode} {totalValueInCurrency.ToString("N2")}");
+                Console.WriteLine($"Change: {change}% {currencyCode} {Math.Abs(priceChange):0.00}\n");
+
+                Console.ResetColor();
+
+                Console.WriteLine("Displaying portfolio");
+                displayAllocations(securities, totalValue);
+                listAllHoldings(securities, currencyRate, currencyCode);
+                Console.SetCursorPosition(Console.WindowWidth - 6, Console.WindowHeight - 1);
+
+                // Print the "EXIT" message
+                Console.Write("(EXIT)");
+
+                // Wait for a key to be pressed
+                ConsoleKeyInfo key = Console.ReadKey(true);
+
+                // Check if the key is intended for the DisplayPortfolio function
+                if (key.Key == ConsoleKey.Escape || key.Key == ConsoleKey.X)
+                {
+                    Console.WriteLine("HEIA");
+                    // Exit the DisplayPortfolio function
+                    Console.WriteLine("Exiting display portfolio view");
+                    break;
+                }
             }
-
-            Console.Clear();
-
-            // Get the updated securities and total value
-            List<Modules.DisplayedSecurity> securities = db.GetDisplayedSecurities();
-            int totalValue = calculateTotal(securities);
-
-            // Convert the total value to the selected currency
-            decimal totalValueInCurrency = totalValue * currencyRate;
-
-            double change = calculateChange_percent(securities);
-            decimal priceChange = Convert.ToDecimal(calculateChange_price(securities)) * Convert.ToDecimal(currencyRate);
-            Console.ForegroundColor = (change >= 0) ? ConsoleColor.Green : ConsoleColor.Red;
-
-            // Display the portfolio information
-            Console.WriteLine($"Total portfolio value: {currencyCode} {totalValueInCurrency.ToString("N2")}");
-            Console.WriteLine($"Change: {change}% {currencyCode} {Math.Abs(priceChange):0.00}\n");
-
-            Console.ResetColor();
-
-            Console.WriteLine("Displaying portfolio");
-            displayAllocations(securities, totalValue);
-            listAllHoldings(securities, currencyRate, currencyCode);
-            Console.SetCursorPosition(Console.WindowWidth - 6, Console.WindowHeight - 1);
-
-            // Print the "EXIT" message
-            Console.Write("(EXIT)");
-
-            // Wait for a key to be pressed
-            ConsoleKeyInfo key = Console.ReadKey(true);
-
-            // Check if the key was Enter or Escape
-            if (key.Key == ConsoleKey.Enter || key.Key == ConsoleKey.Escape)
-            {
-                break; // Exit the while loop
-            }
-
-            Thread.Sleep(1000);
         }
-    }
 
+
+}
 }
 }
 
