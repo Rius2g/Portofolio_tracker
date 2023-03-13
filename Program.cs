@@ -478,6 +478,8 @@ public class Functions
             string currencyCode = Console.ReadLine();
             decimal currencyRate = await get.GetCurrencyExchangeRate("USD", currencyCode);
             db.updatePrices(); 
+            Console.WriteLine("Updating data...");
+            Thread.Sleep(3000);
 
             while (true)
             {

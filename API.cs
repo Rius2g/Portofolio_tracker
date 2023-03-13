@@ -34,7 +34,6 @@ namespace API
         using var httpClient = new HttpClient();
         var response = await httpClient.GetAsync(apiUrl);
         var responseContent = await response.Content.ReadAsStringAsync();
-        Console.WriteLine(responseContent);
 
         // Parse the JSON response to extract the name, price, and previous close values
         var json = JObject.Parse(responseContent);
@@ -74,7 +73,6 @@ namespace API
                 previousClose = (double)historicPrices[1].price;
             }
             double percentChange = (currentPrice - previousClose) / previousClose * 100;
-            Console.WriteLine(cryptoName);
             return Tuple.Create(cryptoName, currentPrice, percentChange);
         }
         else

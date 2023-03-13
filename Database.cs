@@ -186,24 +186,18 @@ namespace Database //do all the setup and functions for database
                 var result = await api.GetCryptoPriceAndPercentChange(security.Ticker);
                 price = result.Item2;
                 change = result.Item3;
-                string priceString = price.ToString();
-                price = Convert.ToDouble(priceString);
             }
             else if (security.Type == 2 || security.Type == 3) //stock, etf, index fund
             {
                 var result = await api.GetStockPriceAndPercentChange(security.Ticker);
                 price = result.Item2;
                 change = result.Item3;
-                string priceString = price.ToString();
-                price = Convert.ToDouble(priceString);
             }
             else if (security.Type == 5) //mutual fund
             {
                 var result = await api.GetMutualFundPrice(security.Ticker);
                 price = result.Item2;
                 change = result.Item3;
-                string priceString = price.ToString();
-                price = Convert.ToDouble(priceString);
             }
 
             else if (security.Type == 6) //by ISIN
@@ -213,9 +207,10 @@ namespace Database //do all the setup and functions for database
                 change = result.Item3;
                 string type = result.Item4;
                 security.Type = typeToInt(result.Item4);
-                string priceString = price.ToString();
-                price = Convert.ToDouble(priceString);
             }
+
+            string priceString = price.ToString("0.00", CultureInfo.InvariantCulture).Replace(',', '.');
+            string changeString = change.ToString("0.00", CultureInfo.InvariantCulture).Replace(',', '.');
 
             // Create a new database connection:
             var connectionStringBuilder = new SqliteConnectionStringBuilder();
@@ -229,7 +224,7 @@ namespace Database //do all the setup and functions for database
             DateTime time = DateTime.Now;
             // Update some data:
             var updateCommand = connection.CreateCommand();
-            updateCommand.CommandText = "UPDATE Securities SET Price = " + price + ", Quantity = " + security.Quantity + ", Date = '" + date + "', Time = '" + time + "', Type = '" + security.Type + "' WHERE Ticker = '" + security.Ticker + "'";
+            updateCommand.CommandText = "UPDATE Securities SET Price = '" + priceString + "', Change = '" + changeString + "', Date = '" + date.ToString("yyyy-MM-dd") + "', Time = '" + time.ToString("HH:mm") + "' WHERE Ticker = '" + security.Ticker + "'";
             updateCommand.ExecuteNonQuery();
 
             // Close the connection:
@@ -257,10 +252,9 @@ namespace Database //do all the setup and functions for database
 
         public void UpdateSecurities(List<Modules.DisplayedSecurity> securities)
         {
-            Console.WriteLine("HEIA");
             foreach (Modules.DisplayedSecurity security in securities)
             {
-                if (security.Type != 4)
+                if (security.Type != 4 && security.Type != 8) //not saving account or manual input mutual fund
                 {
                 UpdateSecurity(security);
                 }
@@ -368,8 +362,7 @@ namespace Database //do all the setup and functions for database
         {
             Console.Clear();
             List<Modules.DisplayedSecurity> securities = GetDisplayedSecurities();
-            Console.WriteLine(securities.Count);
-            // UpdateSecurities(securities);
+            UpdateSecurities(securities);
             return;
         }
     }
