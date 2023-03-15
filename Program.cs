@@ -14,7 +14,7 @@ namespace ConsoleApplication
         switch (option)
         {
             case 1:
-                f.AddSecurity();
+                await f.AddSecurity();
                 break;
             case 2:
                 f.UpdateSecurity();
@@ -72,7 +72,7 @@ public class Functions
 
     // Rest of the code remains the same
 
-    public void AddSecurity()
+    public async Task AddSecurity()
     { //adds a securiy to the database/portofolio
         Console.WriteLine("Adding security");
             
@@ -100,7 +100,7 @@ public class Functions
             {
                 if(type == 7)
                 {
-                    Add_manual_Security();
+                    await Add_manual_Security();
                     break;
                 }
                 if(type == 8)
@@ -169,7 +169,7 @@ public class Functions
 
         }
 
-        public void Add_manual_Security()
+        public async Task Add_manual_Security()
         {
             Console.Clear();
             Console.WriteLine("Adding manual security");
@@ -199,6 +199,26 @@ public class Functions
                         return;
                     }
 
+                    Console.WriteLine("Enter preferred currency: ");
+                    string? currency = Console.ReadLine();
+
+                    if (string.IsNullOrEmpty(currency))
+                    {
+                        Console.WriteLine("Invalid currency. Please enter a valid currency.");
+                        return;
+                    }
+                    decimal priceMultiple;
+
+                    try
+                    {
+                        priceMultiple = await get.GetCurrencyExchangeRate("USD", currency);
+                    }
+                    catch(Exception e)
+                    {
+                        Console.WriteLine("Invalid currency. Please enter a valid currency.");
+                        return;
+                    }
+
                     Console.WriteLine("Enter the holdings:");
                     int holdings;
                     if (!int.TryParse(Console.ReadLine(), out holdings))
@@ -217,7 +237,11 @@ public class Functions
 
 
                     Modules.Security security = new Modules.Security(ticker, holdings, type);
-                    security.Price = price;
+                    Console.WriteLine(ticker);
+                    Console.WriteLine(holdings);
+                    Console.WriteLine(type);
+                    Console.WriteLine(priceMultiple);
+                    security.Price = price / (float)priceMultiple;
                     db.Add_manual_Security(security); //add the security to the database
                 }
             }

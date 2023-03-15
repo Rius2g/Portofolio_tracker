@@ -27,7 +27,7 @@ namespace Database //do all the setup and functions for database
 
                 // Create a new command:
                 var createTableCommand = connection.CreateCommand();
-                createTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS Securities (Ticker TEXT, Name TEXT, Price REAL, Quantity INTEGER, Change REAL, Date TEXT, Time TEXT, Type INTEGER)";
+                createTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS Securities (Ticker TEXT, Name TEXT, Price REAL, Quantity INTEGER, Change REAL, Date TEXT, Time TEXT, Type INTEGER, ManualInput BOOLEAN)";
                 createTableCommand.ExecuteNonQuery();
 
                 // Close the connection:
@@ -94,7 +94,7 @@ namespace Database //do all the setup and functions for database
 
             // Insert some data:
             var insertCommand = connection.CreateCommand();
-            insertCommand.CommandText = "INSERT INTO Securities (Ticker, Name, Price, Quantity, Change, Date, Time, Type) VALUES ('" + security.Ticker + "', '" + name + "', '" + priceString + "', '" + security.Quantity + "', '" + changeString + "', '" + date.ToString("yyyy-MM-dd") + "', '" + time.ToString("HH:mm") + "', '" + security.Type + "')";
+            insertCommand.CommandText = "INSERT INTO Securities (Ticker, Name, Price, Quantity, Change, Date, Time, Type, ManualInput) VALUES ('" + security.Ticker + "', '" + name + "', '" + priceString + "', '" + security.Quantity + "', '" + changeString + "', '" + date.ToString("yyyy-MM-dd") + "', '" + time.ToString("HH:mm") + "', '" + security.Type + "', '" + false + "')";
             insertCommand.ExecuteNonQuery();
 
             // Close the connection:
@@ -113,7 +113,7 @@ namespace Database //do all the setup and functions for database
 
             // Insert some data:
             var insertCommand = connection.CreateCommand();
-            insertCommand.CommandText = "INSERT INTO Securities (Ticker, Name, Price, Quantity, Change, Date, Time, Type) VALUES ('" + security.Ticker + "', '" + "" + "', '" + security.Price + "', '" + security.Quantity + "', '" + 0 + "', '" + 0 + "', '" + 0 + "', '" + security.Type + "')";
+            insertCommand.CommandText = "INSERT INTO Securities (Ticker, Name, Price, Quantity, Change, Date, Time, Type, ManualInput) VALUES ('" + security.Ticker + "', '" + "" + "', '" + security.Price + "', '" + security.Quantity + "', '" + 0 + "', '" + 0 + "', '" + 0 + "', '" + security.Type + "' , '" + true + "')";
             insertCommand.ExecuteNonQuery();
 
             // Close the connection:
@@ -243,7 +243,7 @@ namespace Database //do all the setup and functions for database
 
             // Insert some data:
             var insertCommand = connection.CreateCommand();
-            insertCommand.CommandText = "INSERT INTO Securities (Ticker, Name, Price, Quantity, Change, Date, Time, Type) VALUES ('" + security.Ticker + "', '" + security.Ticker + "', '" + security.Price + "', '" + security.Quantity + "', '" + 0 + "', '" + 0 + "', '" + 0 + "', '" + security.Type + "')";
+            insertCommand.CommandText = "INSERT INTO Securities (Ticker, Name, Price, Quantity, Change, Date, Time, Type, ManualInput) VALUES ('" + security.Ticker + "', '" + security.Ticker + "', '" + security.Price + "', '" + security.Quantity + "', '" + 0 + "', '" + 0 + "', '" + 0 + "', '" + security.Type + "' , '" + true + "')";
             insertCommand.ExecuteNonQuery();
 
             // Close the connection:
@@ -252,9 +252,13 @@ namespace Database //do all the setup and functions for database
 
         public void UpdateSecurities(List<Modules.DisplayedSecurity> securities)
         {
+            Console.WriteLine("Updating securities...");
+            Console.WriteLine("Securities to update: " + securities.Count);
             foreach (Modules.DisplayedSecurity security in securities)
             {
-                if (security.Type != 4 && security.Type != 8) //not saving account or manual input mutual fund
+                Console.WriteLine(security.Ticker);
+                 Console.WriteLine(security.Change);
+                if (security.ManualInput == true) //not manual input
                 {
                 UpdateSecurity(security);
                 }
@@ -345,13 +349,13 @@ namespace Database //do all the setup and functions for database
 
             // Read some data:
             var selectCommand = connection.CreateCommand();
-            selectCommand.CommandText = "SELECT Ticker, Price, Quantity, Change, Date, Time, Type FROM Securities";
+            selectCommand.CommandText = "SELECT Ticker, Price, Quantity, Type, Change, ManualInput FROM Securities";
             using (var reader = selectCommand.ExecuteReader())
             {
                 List<Modules.DisplayedSecurity> securities = new List<Modules.DisplayedSecurity>();
                 while (reader.Read())
                 {
-                    Modules.DisplayedSecurity security = new Modules.DisplayedSecurity(reader.GetString(0), reader.GetFloat(1), reader.GetInt16(2), reader.GetInt16(6), reader.GetDouble(3));
+                    Modules.DisplayedSecurity security = new Modules.DisplayedSecurity(reader.GetString(0), reader.GetFloat(1), reader.GetInt16(2), reader.GetInt16(3), reader.GetDouble(4), reader.GetBoolean(5));
                     securities.Add(security);
                 }
                 return securities;

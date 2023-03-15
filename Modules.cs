@@ -33,13 +33,16 @@ namespace Modules
 
         public double Change { get; set; }
 
-        public DisplayedSecurity(string ticker, float price, int quantity, int type, double change)
+        public bool ManualInput { get; set; }
+
+        public DisplayedSecurity(string ticker, float price, int quantity, int type, double change, bool manualInput)
         {
             Ticker = ticker;
             Price = price;
             Quantity = quantity;
             Type = type;
             Change = change;
+            ManualInput = manualInput;
         }
     }
 }
