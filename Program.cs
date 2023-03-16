@@ -493,6 +493,12 @@ public class Functions
     return Math.Round(totalChange, 2);
     }
 
+    public void seasonpass()
+    {
+        //emotes and shit
+        //john wick
+    }
+
    public double calculateChange_price(List<Modules.DisplayedSecurity> securities)
     {
     double totalValue = calculateTotal(securities);
