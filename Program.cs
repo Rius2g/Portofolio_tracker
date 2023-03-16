@@ -105,7 +105,7 @@ public class Functions
                 }
                 if(type == 8)
                 {
-                    AddSavingsAccount();
+                    await AddSavingsAccount();
                     break;
                 }
                 Console.WriteLine("Enter the ticker:");
@@ -137,7 +137,7 @@ public class Functions
         }
     }
 
-        public void AddSavingsAccount()
+        public async Task AddSavingsAccount()
         {
             Console.Clear();
             Console.WriteLine("Adding savings account");
@@ -153,6 +153,27 @@ public class Functions
                 return;
             }
 
+            Console.WriteLine("Enter the currency of the savings account:");
+            string? currency = Console.ReadLine();
+
+            if (string.IsNullOrEmpty(currency))
+            {
+                Console.WriteLine("Invalid currency. Please enter a valid currency.");
+                return;
+            }
+
+            decimal priceMultiple;
+
+            try
+            {
+                priceMultiple = await get.GetCurrencyExchangeRate("USD", currency);
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine("Invalid currency. Please enter a valid currency.");
+                return;
+            }
+
             Console.WriteLine("Enter the holdings:");
             int holdings;
 
@@ -161,12 +182,10 @@ public class Functions
                 Console.WriteLine("Invalid holdings. Please enter a valid number.");
                 return;
             }
-            
+            holdings = (int)(holdings / priceMultiple);
             Modules.Security security = new Modules.Security(ticker, holdings, type);
             security.Price = 1;
             db.AddSavingsAccount(security); //add the security to the database
-
-
         }
 
         public async Task Add_manual_Security()
