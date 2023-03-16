@@ -1,1 +1,9 @@
 *.db
+*.log
+*.sql
+*.sqlite
+*.temp
+obj
+bin
+*.vscode
+*.DS_Store
