@@ -352,10 +352,6 @@ namespace Database //do all the setup and functions for database
                 while (reader.Read())
                 {
                     Modules.DisplayedSecurity security = new Modules.DisplayedSecurity(reader.GetString(0), reader.GetFloat(1), reader.GetInt32(2), reader.GetInt16(3), reader.GetDouble(4), reader.GetBoolean(5));
-                    Console.WriteLine(security.Ticker);
-                    Console.WriteLine(security.Change);
-                    Console.WriteLine(security.Price);
-                    Console.WriteLine(security.Quantity);
                     securities.Add(security);
                 }
                 return securities;

@@ -256,10 +256,6 @@ public class Functions
 
 
                     Modules.Security security = new Modules.Security(ticker, holdings, type);
-                    Console.WriteLine(ticker);
-                    Console.WriteLine(holdings);
-                    Console.WriteLine(type);
-                    Console.WriteLine(priceMultiple);
                     security.Price = price / (float)priceMultiple;
                     db.Add_manual_Security(security); //add the security to the database
                 }
