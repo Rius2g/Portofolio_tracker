@@ -8,10 +8,11 @@ using System.Web;
 namespace API 
 {
    public class Get
-    {
-        static public string API_KEY = "E6TUK887BIOZOONH";
-        public async Task<Tuple<string, double, double>> GetStockPriceAndPercentChange(string ticker)
+    {   
+        public async Task<Tuple<string, double, double>> GetStockPriceAndPercentChange(string ticker, string API_KEY)
         {
+            try
+            {
             var apiUrl = $"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={ticker}&apikey={API_KEY}";
 
             using var httpClient = new HttpClient();
@@ -25,10 +26,20 @@ namespace API
             var percentChange = (stockPrice - previousClose) / previousClose * 100;
 
             return Tuple.Create(stockName, stockPrice, percentChange);
+                
+            }
+            catch (System.Exception)
+            {
+                
+                throw;
+            }
+            
         }
 
-    public async Task<Tuple<string, double, double, string>> GetStockPriceAndPercentChangeByISIN(string isin)
+    public async Task<Tuple<string, double, double, string>> GetStockPriceAndPercentChangeByISIN(string isin, string API_KEY)
     {
+        try
+        {
         var apiUrl = $"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={isin}&apikey={API_KEY}";
 
         using var httpClient = new HttpClient();
@@ -47,6 +58,13 @@ namespace API
         var percentChange = (price - previousClose) / previousClose * 100;
 
         return Tuple.Create(name, price, percentChange, "Stock");
+            
+        }
+        catch (System.Exception)
+        {
+            
+            throw;
+        }
     }
 
 
@@ -121,8 +139,11 @@ namespace API
         }
         }
 
-        public async Task<decimal> GetCurrencyExchangeRate(string fromCurrency, string toCurrency)
+        public async Task<decimal> GetCurrencyExchangeRate(string fromCurrency, string toCurrency, string API_KEY)
         {
+            try
+            {
+            //API_KEY = db.GetVantageKey();    
             var apiUrl = $"https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency={fromCurrency}&to_currency={toCurrency}&apikey={API_KEY}";
 
             using var httpClient = new HttpClient();
@@ -131,8 +152,14 @@ namespace API
             var responseData = JObject.Parse(responseContent)["Realtime Currency Exchange Rate"];
 
             var exchangeRate = responseData.Value<decimal>("5. Exchange Rate");
-
             return exchangeRate;
+            }
+            catch (System.Exception)
+            {
+                
+                throw;
+            }
+
         }
     }
 
