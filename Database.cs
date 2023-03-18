@@ -6,28 +6,38 @@ using System.Globalization;
 
 namespace Database //do all the setup and functions for database
 {
-
     public class Database
     {
-        private API.Get api;
-        public string lastFetch;
-        public Database()
-        {
-            api = new API.Get();
-            // Create a new database connection:
-            createDB();
-        }
-
+        string databasename = "Holdings.sqlite";
+        private API.Get api = new API.Get();
+        public string lastFetch = "";
+        
+        public string API_KEY = "error";
+        
         public void createDB()
         {
             // Create a new database connection:
-            using (var connection = new SqliteConnection("Data Source=Holdings.db"))
+            using (var connection = new SqliteConnection("Data Source=" + databasename))
             {
                 connection.Open();
 
                 // Create a new command:
                 var createTableCommand = connection.CreateCommand();
-                createTableCommand.CommandText = "CREATE TABLE IF NOT EXISTS Securities (Ticker TEXT, Name TEXT, Price REAL, Quantity INTEGER, Change REAL, Date TEXT, Time TEXT, Type INTEGER, ManualInput BOOLEAN)";
+                createTableCommand.CommandText = @"CREATE TABLE IF NOT EXISTS Securities (
+                                                    Ticker TEXT,
+                                                    Name TEXT, 
+                                                    Price REAL, 
+                                                    Quantity INTEGER, 
+                                                    Change REAL, 
+                                                    Date TEXT, 
+                                                    Time TEXT, 
+                                                    Type INTEGER, 
+                                                    ManualInput BOOLEAN);
+
+                                                    CREATE TABLE IF NOT EXISTS APIKeys (
+                                                    AlphavantageKey TEXT
+                                                    );
+                                                ";
                 createTableCommand.ExecuteNonQuery();
 
                 // Close the connection:
@@ -39,7 +49,7 @@ namespace Database //do all the setup and functions for database
         {
             // Create a new database connection:
             var connectionStringBuilder = new SqliteConnectionStringBuilder();
-            connectionStringBuilder.DataSource = "Holdings.db";
+            connectionStringBuilder.DataSource = databasename;
             var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
             double price = 0;
             double change = 0;
@@ -56,8 +66,12 @@ namespace Database //do all the setup and functions for database
                 change = result.Item3;
             }
             else if (security.Type == 2 || security.Type == 3) //stock, etf, index fund
-            {
-                var result = await api.GetStockPriceAndPercentChange(security.Ticker);
+            {   
+                if (CheckVantageKey() == false)
+                {
+                    return;
+                }
+                var result = await api.GetStockPriceAndPercentChange(security.Ticker, API_KEY);
                 name = result.Item1;
                 price = result.Item2;
                 change = result.Item3;
@@ -71,7 +85,11 @@ namespace Database //do all the setup and functions for database
             }
             else if (security.Type == 6) //by ISIN
             {
-                var result = await api.GetStockPriceAndPercentChangeByISIN(security.Ticker);
+                if (CheckVantageKey() == false)
+                {
+                    return;
+                }
+                var result = await api.GetStockPriceAndPercentChangeByISIN(security.Ticker, API_KEY);
                 name = result.Item1;
                 price = result.Item2;
                 change = result.Item3;
@@ -93,10 +111,20 @@ namespace Database //do all the setup and functions for database
             connection.Open();
 
             // Insert some data:
+            // Console.WriteLine(security.Ticker);
+            // Console.WriteLine(name);
+            // Console.WriteLine(priceString);
+            // Console.WriteLine(security.Quantity);
+            // Console.WriteLine(changeString);
             var insertCommand = connection.CreateCommand();
-            insertCommand.CommandText = "INSERT INTO Securities (Ticker, Name, Price, Quantity, Change, Date, Time, Type, ManualInput) VALUES ('" + security.Ticker + "', '" + name + "', '" + priceString + "', '" + security.Quantity + "', '" + changeString + "', '" + date.ToString("yyyy-MM-dd") + "', '" + time.ToString("HH:mm") + "', '" + security.Type + "', '" + false + "')";
-            insertCommand.ExecuteNonQuery();
-
+            insertCommand.CommandText = @"INSERT INTO Securities (Ticker, Name, Price, Quantity, Change, Date, Time, Type, ManualInput) VALUES ('" + security.Ticker + "', '" + name + "', '" + priceString + "', '" + security.Quantity + "', '" + changeString + "', '" + date.ToString("yyyy-MM-dd") + "', '" + time.ToString("HH:mm") + "', '" + security.Type + "', '" + false + "')";
+            var success =  insertCommand.ExecuteNonQuery();
+            if (success < 1)
+            {
+                Console.WriteLine("Error inserting data");
+                Thread.Sleep(10000);
+            }
+            Console.WriteLine("Data inserted");
             // Close the connection:
             connection.Close();
         }
@@ -105,7 +133,7 @@ namespace Database //do all the setup and functions for database
         {
             // Create a new database connection:
             var connectionStringBuilder = new SqliteConnectionStringBuilder();
-            connectionStringBuilder.DataSource = "Holdings.db";
+            connectionStringBuilder.DataSource = databasename;
             var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
 
             // Open the connection:
@@ -124,7 +152,7 @@ namespace Database //do all the setup and functions for database
         {
             // Create a new database connection:
             var connectionStringBuilder = new SqliteConnectionStringBuilder();
-            connectionStringBuilder.DataSource = "Holdings.db";
+            connectionStringBuilder.DataSource = databasename;
             var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
 
             // Open the connection:
@@ -143,7 +171,7 @@ namespace Database //do all the setup and functions for database
         {
             // Create a new database connection:
             var connectionStringBuilder = new SqliteConnectionStringBuilder();
-            connectionStringBuilder.DataSource = "Holdings.db";
+            connectionStringBuilder.DataSource = databasename;
             var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
 
             // Open the connection:
@@ -162,7 +190,7 @@ namespace Database //do all the setup and functions for database
         {
             // Create a new database connection:
             var connectionStringBuilder = new SqliteConnectionStringBuilder();
-            connectionStringBuilder.DataSource = "Holdings.db";
+            connectionStringBuilder.DataSource = databasename;
             var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
 
             // Open the connection:
@@ -189,7 +217,11 @@ namespace Database //do all the setup and functions for database
             }
             else if (security.Type == 2 || security.Type == 3) //stock, etf, index fund
             {
-                var result = await api.GetStockPriceAndPercentChange(security.Ticker);
+                if (CheckVantageKey() == false)
+                {
+                    return;
+                }
+                var result = await api.GetStockPriceAndPercentChange(security.Ticker, API_KEY);
                 price = result.Item2;
                 change = result.Item3;
             }
@@ -202,7 +234,11 @@ namespace Database //do all the setup and functions for database
 
             else if (security.Type == 6) //by ISIN
             {
-                var result = await api.GetStockPriceAndPercentChangeByISIN(security.Ticker);
+                if (CheckVantageKey() == false)
+                {
+                    return;
+                }
+                var result = await api.GetStockPriceAndPercentChangeByISIN(security.Ticker, API_KEY);
                 price = result.Item2;
                 change = result.Item3;
                 string type = result.Item4;
@@ -235,7 +271,7 @@ namespace Database //do all the setup and functions for database
         {
             // Create a new database connection:
             var connectionStringBuilder = new SqliteConnectionStringBuilder();
-            connectionStringBuilder.DataSource = "Holdings.db";
+            connectionStringBuilder.DataSource = databasename;
             var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
 
             // Open the connection:
@@ -256,7 +292,7 @@ namespace Database //do all the setup and functions for database
             {
                 if (security.ManualInput == true) //not manual input
                 {
-                UpdateSecurity(security);
+                    UpdateSecurity(security);
                 }
                 
             }
@@ -265,7 +301,7 @@ namespace Database //do all the setup and functions for database
 
         public void RemoveSecurity(string ticker)
         {
-            var ConnectionString = "Data Source=Holdings.db";
+            var ConnectionString = "Data Source="+databasename;
             using (var connection = new SqliteConnection(ConnectionString))
             {
                 connection.Open();
@@ -314,7 +350,7 @@ namespace Database //do all the setup and functions for database
         {
             // Create a new database connection:
             var connectionStringBuilder = new SqliteConnectionStringBuilder();
-            connectionStringBuilder.DataSource = "Holdings.db";
+            connectionStringBuilder.DataSource = databasename;
             var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
 
             // Open the connection:
@@ -322,7 +358,8 @@ namespace Database //do all the setup and functions for database
 
             // Delete some data:
             var deleteCommand = connection.CreateCommand();
-            deleteCommand.CommandText = "DELETE FROM Securities";
+            deleteCommand.CommandText = @"DELETE FROM Securities;
+                                            DELETE FROMAPIKeys";
             deleteCommand.ExecuteNonQuery();
 
             // Close the connection:
@@ -337,7 +374,7 @@ namespace Database //do all the setup and functions for database
 
             // Create a new database connection:
             var connectionStringBuilder = new SqliteConnectionStringBuilder();
-            connectionStringBuilder.DataSource = "Holdings.db";
+            connectionStringBuilder.DataSource = databasename;
             var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
 
             // Open the connection:
@@ -364,6 +401,74 @@ namespace Database //do all the setup and functions for database
             List<Modules.DisplayedSecurity> securities = GetDisplayedSecurities();
             UpdateSecurities(securities);
             return;
+        }
+
+
+
+        public int postVantageKey(string key)
+        {
+            //post key to database
+            var connection = new SqliteConnection("Data Source="+databasename);
+            connection.Open();
+            var insertCommand = connection.CreateCommand();
+            insertCommand.CommandText = "INSERT INTO APIKeys (AlphavantageKey) VALUES ('" + key + "')";
+            int status = insertCommand.ExecuteNonQuery();
+            connection.Close();
+            return status;
+
+        }
+
+
+        public string GetVantageKey()
+        {
+            try
+            {
+                var connection = new SqliteConnection("Data Source="+databasename);
+                connection.Open();
+                var selectCommand = connection.CreateCommand();
+                selectCommand.CommandText = "SELECT AlphavantageKey FROM APIKeys;";
+                var reader = selectCommand.ExecuteReader();
+                reader.Read();
+                if (reader.HasRows == false)
+                {
+                    connection.Close();
+                    API_KEY = "error";
+                    return "error";
+                }
+                string key = reader.GetString(0);
+                connection.Close();
+                API_KEY = key;
+                return key;
+                
+            }
+            catch (Exception)
+            {
+                API_KEY = "error";
+                return "error";
+                throw;
+            }
+            //get key from database
+        }
+        public bool CheckVantageKey()
+        {
+            if (API_KEY == "error")
+            {
+                Console.Clear();
+                Console.WriteLine("No API key found. Please get your API key from alphavantage.co \n and enter it in settings");
+                Console.WriteLine("Press any key to continue");
+                //make user press a button to continue
+                while(true){
+                    if(Console.ReadKey(true).Key != ConsoleKey.NoName){
+                        break;
+                    }
+
+                }
+                return false;
+            }
+            else
+            {
+                return true;
+            }
         }
     }
 
