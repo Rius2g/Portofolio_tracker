@@ -27,15 +27,13 @@ namespace ConsoleApplication
                         await f.DisplayPortfolio();
                         break;
                     case 5:
-                        //f.PurgeDatabase();
                         f.Settings();
                         break;
                     case 6:
                         f.Exit();
                         return;
                     default:
-                        Console.WriteLine("Invalid option");
-                        break;
+                        continue;
                 }
             }   
         }
@@ -60,7 +58,7 @@ namespace ConsoleApplication
                 // Read the key that was pressed
                 ConsoleKeyInfo key = Console.ReadKey(true);
 
-                // Check if the key was Enter
+                // Check value of the key
                 if (char.IsDigit(key.KeyChar))
                 {
                     int number = int.Parse(key.KeyChar.ToString());
@@ -68,21 +66,20 @@ namespace ConsoleApplication
                 }
                 else
                 {
-                    Console.WriteLine("Invalid option");
-                    return 6;
+                    return 0;
                 }
             }
 
-        // Rest of the code remains the same
+        
 
             public async Task AddSecurity()
             { //adds a securiy to the database/portofolio
                 Console.WriteLine("Adding security");
                     
-                    //type (crpyto, stock, bond, etc.)
-                    //Ticker
-                    //Holdings
-                    //The program does the rest
+                //type (crpyto, stock, bond, etc.)
+                //Ticker
+                //Holdings
+                //The program does the rest
                 Console.Clear();
                 Console.WriteLine("Enter the type of security you want to add\n 1. Crypto\n 2. Stock\n 3. ETF\n 4. Mutual Fund\n 5. Index Fund\n 6. By ISI\n 7. Manual input\n 8. Savings account\n 9. Abort");
                 ConsoleKeyInfo key = Console.ReadKey(true);
