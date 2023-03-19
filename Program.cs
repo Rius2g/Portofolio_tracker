@@ -589,12 +589,19 @@ namespace ConsoleApplication
                 // Get the display currency from user input
                 Console.WriteLine("Enter the currency you would like to display the portfolio in: ");
                 string? currencyCode = Console.ReadLine();
-
                 string API_Key = db.GetVantageKey();
                 if (API_Key == "error")
-                {
+                {   
+                    Console.Clear();
                     Console.WriteLine("No Vantage API key found. Please add one in the settings.");
+                    Console.WriteLine("Press any key to continue to main menu...");
+                    while(true){
+                        if(Console.ReadKey(true).Key != ConsoleKey.NoName){
+                            break;
+                        }
+                    }
                     return;
+
                 }
                 decimal currencyRate = await get.GetCurrencyExchangeRate("USD", currencyCode, API_Key);
                 db.updatePrices(); 
