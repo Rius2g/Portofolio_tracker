@@ -359,7 +359,7 @@ namespace Database //do all the setup and functions for database
             // Delete some data:
             var deleteCommand = connection.CreateCommand();
             deleteCommand.CommandText = @"DELETE FROM Securities;
-                                            DELETE FROMAPIKeys";
+                                            DELETE FROM APIKeys";
             deleteCommand.ExecuteNonQuery();
 
             // Close the connection:
