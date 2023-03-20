@@ -89,7 +89,7 @@ namespace ConsoleApplication
             
                 type = int.Parse(key.KeyChar.ToString());
                 switch(type){
-                    case int n when (n>=1 || n<=6):
+                    case int n when (n>=1 && n<=6):
                         Console.WriteLine("Enter the ticker:");
                         string? ticker = Console.ReadLine();
 
@@ -101,17 +101,28 @@ namespace ConsoleApplication
                         }
 
                         Console.WriteLine("Enter the holdings:");
-                        int holdings;
-                        if (!int.TryParse(Console.ReadLine(), out holdings))
+                        try
+                        {   
+                            
+                            double holdings; 
+                            double.TryParse(Console.ReadLine().Replace(".",","), out holdings);
+                            Console.WriteLine(holdings);
+                            //Thread.Sleep(1000000);
+                            Modules.Security security = new Modules.Security(ticker, holdings, type);
+                            db.AddSecurity(security); //add the security to the database
+                            return;
+                            
+                        }
+                        catch (System.Exception)
                         {
                             Console.WriteLine("Invalid holdings. Please enter a valid number.");
                             await AddSecurity();
                             return;
                         }
 
-                        Modules.Security security = new Modules.Security(ticker, holdings, type);
-                        db.AddSecurity(security); //add the security to the database
-                        return;
+
+                        
+
 
                     case 7:
                         await Add_manual_Security();
@@ -120,6 +131,9 @@ namespace ConsoleApplication
                     
                     case 8:
                         await AddSavingsAccount();
+                        return;
+                    case 9:
+                        Main();
                         return;
 
                     default :
@@ -155,7 +169,7 @@ namespace ConsoleApplication
                     return;
                 }
 
-                decimal priceMultiple;
+                double priceMultiple;
 
                 try
                 {   
@@ -225,7 +239,7 @@ namespace ConsoleApplication
                             Console.WriteLine("Invalid currency. Please enter a valid currency.");
                             return;
                         }
-                        decimal priceMultiple;
+                        double priceMultiple;
 
                         try
                         {
@@ -447,24 +461,24 @@ namespace ConsoleApplication
 
             }
 
-            public void listAllHoldings(List<Modules.DisplayedSecurity> securities, decimal priceInCurrency, string currencyCode)
+            public void listAllHoldings(List<Modules.DisplayedSecurity> securities, double priceInCurrency, string currencyCode)
             {
                 CultureInfo cultureInfo = CultureInfo.GetCultureInfo(currencyCode);
 
                 Console.WriteLine($"\nHoldings displayed in {currencyCode}:\n");
                 Console.WriteLine("{0,-10} {1,-10} {2,-15} {3,-15} {4,-10} {5,-10}", "Ticker", "Quantity", "Price", "Value", "Change", "Percentage");
 
-                decimal totalValue = calculateTotal(securities) * priceInCurrency;
+                double totalValue = calculateTotal(securities) * priceInCurrency;
 
                 for (int i = 0; i < securities.Count; i++)
                 {
-                    decimal value = (decimal)securities[i].Price * securities[i].Quantity / priceInCurrency;
-                    decimal price = Math.Round((decimal)securities[i].Price * priceInCurrency, 2);
+                    double value = (double)securities[i].Price * securities[i].Quantity / priceInCurrency;
+                    double price = Math.Round((double)securities[i].Price * priceInCurrency, 2);
                     string priceS = string.Format(cultureInfo, "{0:C}", price);
-                    decimal valueInCurrency = priceInCurrency * (decimal)securities[i].Quantity * (decimal)securities[i].Price;
+                    double valueInCurrency = priceInCurrency * (double)securities[i].Quantity * (double)securities[i].Price;
                     string valueS = string.Format(cultureInfo, "{0:# ### ###.00}", valueInCurrency);
-                    decimal percentage = valueInCurrency / totalValue * 100;
-                    decimal change = (decimal)securities[i].Change;
+                    double percentage = valueInCurrency / totalValue * 100;
+                    double change = (double)securities[i].Change;
                     string changeString;
 
                     // Change the color of the Change and Price columns based on the sign of the change
@@ -603,7 +617,7 @@ namespace ConsoleApplication
                     return;
 
                 }
-                decimal currencyRate = await get.GetCurrencyExchangeRate("USD", currencyCode, API_Key);
+                double currencyRate = await get.GetCurrencyExchangeRate("USD", currencyCode, API_Key);
                 db.updatePrices(); 
                 Console.WriteLine("Updating data...");
                 Thread.Sleep(3000);
@@ -624,10 +638,10 @@ namespace ConsoleApplication
                     int totalValue = calculateTotal(securities);
 
                     // Convert the total value to the selected currency
-                    decimal totalValueInCurrency = totalValue * currencyRate;
+                    double totalValueInCurrency = totalValue * currencyRate;
 
                     double change = calculateChange_percent(securities);
-                    decimal priceChange = Convert.ToDecimal(calculateChange_price(securities)) * Convert.ToDecimal(currencyRate);
+                    double priceChange = Convert.ToDouble(calculateChange_price(securities)) * Convert.ToDouble(currencyRate);
                     Console.ForegroundColor = (change >= 0) ? ConsoleColor.Green : ConsoleColor.Red;
 
                     // Display the portfolio information

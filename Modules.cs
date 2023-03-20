@@ -9,14 +9,14 @@ namespace Modules
     {
         public string Ticker { get; set; }
         public float Price { get; set; }
-        public int Quantity { get; set; }
+        public double Quantity { get; set; }
         public DateTime Date { get; set; }
         public DateTime Time { get; set; }
         public int Type { get; set; }
 
         public double Change { get; set; }
 
-        public Security(string ticker, int quantity, int type)
+        public Security(string ticker, double quantity, int type)
         {
             Ticker = ticker;
             Quantity = quantity;
@@ -28,14 +28,14 @@ namespace Modules
     {
         public string Ticker { get; set; }
         public float Price { get; set; }
-        public int Quantity { get; set; }
+        public double Quantity { get; set; }
         public int Type { get; set; }
 
         public double Change { get; set; }
 
         public bool ManualInput { get; set; }
 
-        public DisplayedSecurity(string ticker, float price, int quantity, int type, double change, bool manualInput)
+        public DisplayedSecurity(string ticker, float price, double quantity, int type, double change, bool manualInput)
         {
             Ticker = ticker;
             Price = price;

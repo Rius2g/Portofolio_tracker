@@ -27,7 +27,7 @@ namespace Database //do all the setup and functions for database
                                                     Ticker TEXT,
                                                     Name TEXT, 
                                                     Price REAL, 
-                                                    Quantity INTEGER, 
+                                                    Quantity REAL, 
                                                     Change REAL, 
                                                     Date TEXT, 
                                                     Time TEXT, 
@@ -110,23 +110,18 @@ namespace Database //do all the setup and functions for database
             // Open the connection:
             connection.Open();
 
-            // Insert some data:
-            // Console.WriteLine(security.Ticker);
-            // Console.WriteLine(name);
-            // Console.WriteLine(priceString);
-            // Console.WriteLine(security.Quantity);
-            // Console.WriteLine(changeString);
             var insertCommand = connection.CreateCommand();
             insertCommand.CommandText = @"INSERT INTO Securities (Ticker, Name, Price, Quantity, Change, Date, Time, Type, ManualInput) VALUES ('" + security.Ticker + "', '" + name + "', '" + priceString + "', '" + security.Quantity + "', '" + changeString + "', '" + date.ToString("yyyy-MM-dd") + "', '" + time.ToString("HH:mm") + "', '" + security.Type + "', '" + false + "')";
             var success =  insertCommand.ExecuteNonQuery();
             if (success < 1)
             {
                 Console.WriteLine("Error inserting data");
-                Thread.Sleep(10000);
+                
             }
             Console.WriteLine("Data inserted");
             // Close the connection:
             connection.Close();
+            return;
         }
 
         public void Add_manual_Security(Modules.Security security)
@@ -386,9 +381,13 @@ namespace Database //do all the setup and functions for database
             using (var reader = selectCommand.ExecuteReader())
             {
                 List<Modules.DisplayedSecurity> securities = new List<Modules.DisplayedSecurity>();
+                double quant;
                 while (reader.Read())
                 {
-                    Modules.DisplayedSecurity security = new Modules.DisplayedSecurity(reader.GetString(0), reader.GetFloat(1), reader.GetInt32(2), reader.GetInt16(3), reader.GetDouble(4), reader.GetBoolean(5));
+                    double.TryParse(reader.GetString(2),out quant);
+                    Modules.DisplayedSecurity security = new Modules.DisplayedSecurity(reader.GetString(0), reader.GetFloat(1),quant , reader.GetInt16(3), reader.GetDouble(4), reader.GetBoolean(5));
+                    Console.WriteLine("Quantity: " + security.Quantity);
+                    //Thread.Sleep(200000);
                     securities.Add(security);
                 }
                 return securities;
