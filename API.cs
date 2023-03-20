@@ -139,7 +139,7 @@ namespace API
         }
         }
 
-        public async Task<decimal> GetCurrencyExchangeRate(string fromCurrency, string toCurrency, string API_KEY)
+        public async Task<double> GetCurrencyExchangeRate(string fromCurrency, string toCurrency, string API_KEY)
         {
             try
             {
@@ -151,7 +151,7 @@ namespace API
             var responseContent = await response.Content.ReadAsStringAsync();
             var responseData = JObject.Parse(responseContent)["Realtime Currency Exchange Rate"];
 
-            var exchangeRate = responseData.Value<decimal>("5. Exchange Rate");
+            var exchangeRate = responseData.Value<double>("5. Exchange Rate");
             return exchangeRate;
             }
             catch (System.Exception)
