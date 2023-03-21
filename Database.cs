@@ -97,13 +97,11 @@ namespace Database //do all the setup and functions for database
 
             // Convert the change to a string with two decimal places, and replace the comma with a period:
             string changeString = change.ToString("0.00", CultureInfo.InvariantCulture).Replace(',', '.');
-
             // Try to parse the change value with the correct format:
             if (double.TryParse(changeString, NumberStyles.Any, CultureInfo.InvariantCulture, out double changeValue))
             {
                 change = changeValue;
             }
-
             // Convert the price to a string, and replace the comma with a period:
             string priceString = price.ToString("0.00", CultureInfo.InvariantCulture).Replace(',', '.');
 
@@ -382,12 +380,21 @@ namespace Database //do all the setup and functions for database
             {
                 List<Modules.DisplayedSecurity> securities = new List<Modules.DisplayedSecurity>();
                 double quant;
+                bool parsed;
                 while (reader.Read())
                 {
-                    double.TryParse(reader.GetString(2),out quant);
+                    parsed = double.TryParse(reader.GetString(2).Replace(".",","),out quant);
+                    if(parsed == false)
+                    {
+                        Console.WriteLine("Error parsing quantity of " + reader.GetString(0) + " to double. Setting quantity to 0.");
+                        quant = 0;
+                        while(true){
+                            if(Console.ReadKey(true).Key != ConsoleKey.NoName){
+                                break;
+                            }
+                        }
+                    }
                     Modules.DisplayedSecurity security = new Modules.DisplayedSecurity(reader.GetString(0), reader.GetFloat(1),quant , reader.GetInt16(3), reader.GetDouble(4), reader.GetBoolean(5));
-                    Console.WriteLine("Quantity: " + security.Quantity);
-                    //Thread.Sleep(200000);
                     securities.Add(security);
                 }
                 return securities;
@@ -428,13 +435,8 @@ namespace Database //do all the setup and functions for database
                 selectCommand.CommandText = "SELECT AlphavantageKey FROM APIKeys;";
                 var reader = selectCommand.ExecuteReader();
                 reader.Read();
-                if (reader.HasRows == false)
-                {
-                    connection.Close();
-                    API_KEY = "error";
-                    return "error";
-                }
                 string key = reader.GetString(0);
+
                 connection.Close();
                 API_KEY = key;
                 return key;
@@ -460,7 +462,6 @@ namespace Database //do all the setup and functions for database
                     if(Console.ReadKey(true).Key != ConsoleKey.NoName){
                         break;
                     }
-
                 }
                 return false;
             }
