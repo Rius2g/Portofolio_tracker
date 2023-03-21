@@ -11,7 +11,7 @@ namespace ConsoleApplication
             Functions f = new Functions();
             while (true)
             {
-                int option = await f.Menu();
+                int option = f.Menu();
                 switch (option)
                 {
                     case 1:
@@ -43,7 +43,7 @@ namespace ConsoleApplication
             public Database.Database db = new Database.Database();
             public API.Get get = new API.Get();
 
-            public async Task<int> Menu()
+            public int Menu()
             {
                 db.createDB();
                 Console.Clear();
@@ -74,8 +74,8 @@ namespace ConsoleApplication
 
             public async Task AddSecurity()
             { //adds a securiy to the database/portofolio
+                db.GetVantageKey();
                 Console.WriteLine("Adding security");
-                    
                 //type (crpyto, stock, bond, etc.)
                 //Ticker
                 //Holdings
@@ -104,10 +104,9 @@ namespace ConsoleApplication
                         try
                         {   
                             
-                            double holdings; 
-                            double.TryParse(Console.ReadLine().Replace(".",","), out holdings);
+                            double holdings;
+                            double.TryParse(Console.ReadLine()?.Replace(".",","), out holdings);
                             Console.WriteLine(holdings);
-                            //Thread.Sleep(1000000);
                             Modules.Security security = new Modules.Security(ticker, holdings, type);
                             db.AddSecurity(security); //add the security to the database
                             return;
@@ -120,10 +119,6 @@ namespace ConsoleApplication
                             return;
                         }
 
-
-                        
-
-
                     case 7:
                         await Add_manual_Security();
                         return;
@@ -133,7 +128,7 @@ namespace ConsoleApplication
                         await AddSavingsAccount();
                         return;
                     case 9:
-                        Main();
+                        await Main();
                         return;
 
                     default :
@@ -176,6 +171,7 @@ namespace ConsoleApplication
                     string API_Key = db.GetVantageKey();
                     if (API_Key == "error")
                     {
+                        Console.WriteLine("2");
                         Console.WriteLine("No Vantage API key found. Please add one in the settings.");
                         return;
                     }
@@ -246,6 +242,7 @@ namespace ConsoleApplication
                             string API_Key = db.GetVantageKey();
                             if (API_Key == "error")
                             {
+                                Console.WriteLine("1");
                                 Console.WriteLine("No Vantage API key found. Please add one in the settings.");
                                 return;
                             }
@@ -444,7 +441,6 @@ namespace ConsoleApplication
                     if(Console.ReadKey(true).Key != ConsoleKey.NoName){
                         break;
                     }
-
                 }
 
                 return;
@@ -607,6 +603,7 @@ namespace ConsoleApplication
                 if (API_Key == "error")
                 {   
                     Console.Clear();
+                    Console.WriteLine("3");
                     Console.WriteLine("No Vantage API key found. Please add one in the settings.");
                     Console.WriteLine("Press any key to continue to main menu...");
                     while(true){
