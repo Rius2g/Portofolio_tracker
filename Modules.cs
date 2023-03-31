@@ -35,6 +35,8 @@ namespace Modules
 
         public bool ManualInput { get; set; }
 
+        public double avgPurchasePrice { get; set; }
+
         public DisplayedSecurity(string ticker, float price, double quantity, int type, double change, bool manualInput)
         {
             Ticker = ticker;

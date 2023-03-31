@@ -462,7 +462,7 @@ namespace ConsoleApplication
                 CultureInfo cultureInfo = CultureInfo.GetCultureInfo(currencyCode);
 
                 Console.WriteLine($"\nHoldings displayed in {currencyCode}:\n");
-                Console.WriteLine("{0,-10} {1,-10} {2,-15} {3,-15} {4,-10} {5,-10}", "Ticker", "Quantity", "Price", "Value", "Change", "Percentage");
+                Console.WriteLine("{0,-10} {1,-10} {2,-15} {3,-15} {4,-10} {5,-10} {6,-10}", "Ticker", "Quantity", "Price", "Value", "Change", "Percentage", "Average Purchase Price");
 
                 double totalValue = calculateTotal(securities) * priceInCurrency;
 
@@ -476,6 +476,7 @@ namespace ConsoleApplication
                     double percentage = valueInCurrency / totalValue * 100;
                     double change = (double)securities[i].Change;
                     string changeString;
+                    string averagePurchasePrice = string.Format(cultureInfo, "{0:C}", securities[i].avgPurchasePrice);
 
                     // Change the color of the Change and Price columns based on the sign of the change
                     if (change >= 0)
@@ -489,7 +490,7 @@ namespace ConsoleApplication
                         changeString = $"{change.ToString("N2")}%";
                     }
 
-                    Console.WriteLine("{0,-10} {1,-10} {2,-15} {3,-15} {4,-10} {5,-10}", securities[i].Ticker, securities[i].Quantity, priceS, valueS, changeString, Math.Round(percentage, 2) + "%");
+                    Console.WriteLine("{0,-10} {1,-10} {2,-15} {3,-15} {4,-10} {5,-10} {6,-10}", securities[i].Ticker, securities[i].Quantity, priceS, valueS, changeString, Math.Round(percentage, 2) + "%", averagePurchasePrice);
 
                     Console.ResetColor();
                 }
