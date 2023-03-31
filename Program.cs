@@ -589,11 +589,26 @@ namespace ConsoleApplication
                 return Math.Round(totalChange, 2);
             }
 
+            public double averageTotal(List<Modules.DisplayedSecurity> securities)
+            {
+                double total = 0;
+                foreach (var security in securities)
+                {
+                    total += security.avgPurchasePrice * security.Quantity;
+                }
+
+                return total;
+            }
+
+            public double averageChange(int total, double averageTotal)
+            {
+                return Math.Round((total - averageTotal) / averageTotal * 100, 2);
+            }
+
 
             public async Task DisplayPortfolio()
             {
                 const int RefreshIntervalMinutes = 15;
-
                 Stopwatch refreshTimer = new Stopwatch();
                 refreshTimer.Start();
                 Console.Clear();
@@ -641,10 +656,12 @@ namespace ConsoleApplication
                     double change = calculateChange_percent(securities);
                     double priceChange = Convert.ToDouble(calculateChange_price(securities)) * Convert.ToDouble(currencyRate);
                     Console.ForegroundColor = (change >= 0) ? ConsoleColor.Green : ConsoleColor.Red;
-
+                    double avgTotal = averageTotal(securities);
+                    double avgChange = averageChange(totalValue, avgTotal);
                     // Display the portfolio information
                     Console.WriteLine($"Total portfolio value: {currencyCode} {totalValueInCurrency.ToString("N2")}");
-                    Console.WriteLine($"Change: {change}% {currencyCode} {Math.Abs(priceChange):0.00}\n");
+                    Console.WriteLine($"24H Change: {change}% {currencyCode} {Math.Abs(priceChange):0.00}\n");
+                    Console.WriteLine($"Change from average buy price: {avgChange}% "); //displays change from average price
 
                     Console.ResetColor();
 
