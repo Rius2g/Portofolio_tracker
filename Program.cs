@@ -660,7 +660,7 @@ namespace ConsoleApplication
                     double avgChange = averageChange(totalValue, avgTotal);
                     // Display the portfolio information
                     Console.WriteLine($"Total portfolio value: {currencyCode} {totalValueInCurrency.ToString("N2")}");
-                    Console.WriteLine($"24H Change: {change}% {currencyCode} {Math.Abs(priceChange):0.00}\n");
+                    Console.WriteLine($"24H Change: {change}% {currencyCode} {Math.Abs(priceChange):0.00}");
                     Console.WriteLine($"Change from average buy price: {avgChange}% "); //displays change from average price
 
                     Console.ResetColor();
