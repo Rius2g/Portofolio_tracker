@@ -462,7 +462,7 @@ namespace ConsoleApplication
                 CultureInfo cultureInfo = CultureInfo.GetCultureInfo(currencyCode);
 
                 Console.WriteLine($"\nHoldings displayed in {currencyCode}:\n");
-                Console.WriteLine("{0,-10} {1,-10} {2,-15} {3,-15} {4,-10} {5,-10}", "Ticker", "Quantity", "Price", "Value", "Change", "Percentage");
+                Console.WriteLine("{0,-10} {1,-10} {2,-15} {3,-15} {4,-10} {5,-10} {6,-10}", "Ticker", "Quantity", "Price", "Value", "Change", "Percentage", "Average Purchase Price");
 
                 double totalValue = calculateTotal(securities) * priceInCurrency;
 
@@ -476,6 +476,7 @@ namespace ConsoleApplication
                     double percentage = valueInCurrency / totalValue * 100;
                     double change = (double)securities[i].Change;
                     string changeString;
+                    string averagePurchasePrice = string.Format(cultureInfo, "{0:C}", securities[i].avgPurchasePrice);
 
                     // Change the color of the Change and Price columns based on the sign of the change
                     if (change >= 0)
@@ -489,7 +490,7 @@ namespace ConsoleApplication
                         changeString = $"{change.ToString("N2")}%";
                     }
 
-                    Console.WriteLine("{0,-10} {1,-10} {2,-15} {3,-15} {4,-10} {5,-10}", securities[i].Ticker, securities[i].Quantity, priceS, valueS, changeString, Math.Round(percentage, 2) + "%");
+                    Console.WriteLine("{0,-10} {1,-10} {2,-15} {3,-15} {4,-10} {5,-10} {6,-10}", securities[i].Ticker, securities[i].Quantity, priceS, valueS, changeString, Math.Round(percentage, 2) + "%", averagePurchasePrice);
 
                     Console.ResetColor();
                 }
@@ -588,11 +589,26 @@ namespace ConsoleApplication
                 return Math.Round(totalChange, 2);
             }
 
+            public double averageTotal(List<Modules.DisplayedSecurity> securities)
+            {
+                double total = 0;
+                foreach (var security in securities)
+                {
+                    total += security.avgPurchasePrice * security.Quantity;
+                }
+
+                return total;
+            }
+
+            public double averageChange(int total, double averageTotal)
+            {
+                return Math.Round((total - averageTotal) / averageTotal * 100, 2);
+            }
+
 
             public async Task DisplayPortfolio()
             {
                 const int RefreshIntervalMinutes = 15;
-
                 Stopwatch refreshTimer = new Stopwatch();
                 refreshTimer.Start();
                 Console.Clear();
@@ -640,10 +656,12 @@ namespace ConsoleApplication
                     double change = calculateChange_percent(securities);
                     double priceChange = Convert.ToDouble(calculateChange_price(securities)) * Convert.ToDouble(currencyRate);
                     Console.ForegroundColor = (change >= 0) ? ConsoleColor.Green : ConsoleColor.Red;
-
+                    double avgTotal = averageTotal(securities);
+                    double avgChange = averageChange(totalValue, avgTotal);
                     // Display the portfolio information
                     Console.WriteLine($"Total portfolio value: {currencyCode} {totalValueInCurrency.ToString("N2")}");
-                    Console.WriteLine($"Change: {change}% {currencyCode} {Math.Abs(priceChange):0.00}\n");
+                    Console.WriteLine($"24H Change: {change}% {currencyCode} {Math.Abs(priceChange):0.00}");
+                    Console.WriteLine($"Change from average buy price: {avgChange}% "); //displays change from average price
 
                     Console.ResetColor();
 

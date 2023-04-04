@@ -32,7 +32,8 @@ namespace Database //do all the setup and functions for database
                                                     Date TEXT, 
                                                     Time TEXT, 
                                                     Type INTEGER, 
-                                                    ManualInput BOOLEAN);
+                                                    ManualInput BOOLEAN,
+                                                    PurchasePrice REAL);
 
                                                     CREATE TABLE IF NOT EXISTS APIKeys (
                                                     AlphavantageKey TEXT
@@ -109,7 +110,11 @@ namespace Database //do all the setup and functions for database
             connection.Open();
 
             var insertCommand = connection.CreateCommand();
-            insertCommand.CommandText = @"INSERT INTO Securities (Ticker, Name, Price, Quantity, Change, Date, Time, Type, ManualInput) VALUES ('" + security.Ticker + "', '" + name + "', '" + priceString + "', '" + security.Quantity + "', '" + changeString + "', '" + date.ToString("yyyy-MM-dd") + "', '" + time.ToString("HH:mm") + "', '" + security.Type + "', '" + false + "')";
+            insertCommand.CommandText = @"INSERT INTO Securities 
+                              (Ticker, Name, Price, Quantity, Change, Date, Time, Type, PurchasePrice, ManualInput) 
+                              VALUES 
+                              ('" + security.Ticker + "', '" + name + "', '" + priceString + "', '" + security.Quantity + "', '" + changeString + "', '" + date.ToString("yyyy-MM-dd") + "', '" + time.ToString("HH:mm") + "', '" + security.Type + "', '" + priceString + "', 0)";
+
             var success =  insertCommand.ExecuteNonQuery();
             if (success < 1)
             {
@@ -375,7 +380,7 @@ namespace Database //do all the setup and functions for database
 
             // Read some data:
             var selectCommand = connection.CreateCommand();
-            selectCommand.CommandText = "SELECT Ticker, Price, Quantity, Type, Change, ManualInput FROM Securities";
+            selectCommand.CommandText = "SELECT Ticker, Price, Quantity, Type, Change, ManualInput, PurchasePrice FROM Securities";
             using (var reader = selectCommand.ExecuteReader())
             {
                 List<Modules.DisplayedSecurity> securities = new List<Modules.DisplayedSecurity>();
@@ -394,12 +399,54 @@ namespace Database //do all the setup and functions for database
                             }
                         }
                     }
+                    //do a call here to get the price and change
                     Modules.DisplayedSecurity security = new Modules.DisplayedSecurity(reader.GetString(0), reader.GetFloat(1),quant , reader.GetInt16(3), reader.GetDouble(4), reader.GetBoolean(5));
+                    security.PurchasePrice = reader.GetFloat(6);
+                    Console.WriteLine(security);
                     securities.Add(security);
                 }
+                List<string> tickers = new List<string>();
+                foreach (Modules.DisplayedSecurity security in securities)
+                {
+                    if(tickers.Contains(security.Ticker) == false)
+                    {
+                        tickers.Add(security.Ticker);
+                        security.avgPurchasePrice = calculateAveagePurchasePrice(securities, security.Ticker);
+                    }
+                    else
+                    {
+                        securities.Remove(security); //already fixed the avg price
+                    }
+                }
+
+                //get the avg price of the securities, create a list with the tickers that have been added so no dupliactes no more
                 return securities;
             }
         }
+
+        public double calculateAveagePurchasePrice(List<Modules.DisplayedSecurity> securities, string ticker)
+            {
+                double totalCost = 0;
+                double avgPurchasePrice = 0;
+                for(int i = 0; i < securities.Count; i++)
+                {
+                    if(securities[i].Ticker == ticker)
+                    {
+                        totalCost += securities[i].PurchasePrice * securities[i].Quantity; //total price for that security
+                    }
+                }
+                //create a list for it here
+
+                for(int j = 0; j < securities.Count; j++)
+                {
+                    if(securities[j].Ticker == ticker)
+                    {
+                        double purchasePercent = (securities[j].PurchasePrice * securities[j].Quantity) / totalCost;//total price for that security divided by the quantity
+                        avgPurchasePrice += purchasePercent * securities[j].PurchasePrice;
+                    }
+                }
+                return avgPurchasePrice; //returns the average price
+            }
 
         public void updatePrices()
         {
