@@ -13,6 +13,8 @@ namespace Database //do all the setup and functions for database
         public string lastFetch = "";
         
         public string API_KEY = "error";
+
+        public string currency = "USD";
         
         public void createDB()
         {
@@ -34,8 +36,9 @@ namespace Database //do all the setup and functions for database
                                                     Type INTEGER, 
                                                     ManualInput BOOLEAN);
 
-                                                    CREATE TABLE IF NOT EXISTS APIKeys (
-                                                    AlphavantageKey TEXT
+                                                    CREATE TABLE IF NOT EXISTS Users (
+                                                    AlphavantageKey TEXT,
+                                                    Currency TEXT
                                                     );
                                                 ";
                 createTableCommand.ExecuteNonQuery();
@@ -352,7 +355,7 @@ namespace Database //do all the setup and functions for database
             // Delete some data:
             var deleteCommand = connection.CreateCommand();
             deleteCommand.CommandText = @"DELETE FROM Securities;
-                                            DELETE FROM APIKeys";
+                                            DELETE FROM Users";
             deleteCommand.ExecuteNonQuery();
 
             // Close the connection:
@@ -409,6 +412,39 @@ namespace Database //do all the setup and functions for database
             return;
         }
 
+        public void postCurrency(string currency)
+        {
+            var connectionStringBuilder = new SqliteConnectionStringBuilder();
+            connectionStringBuilder.DataSource = databasename;
+            var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
+
+            // Open the connection:
+            connection.Open();
+
+            // Update some data:
+            var selectCommand = connection.CreateCommand();
+            var updateCommand = connection.CreateCommand();
+
+            //need to first check if currency is already in database
+            selectCommand.CommandText = "SELECT * FROM Users";
+            var reader = selectCommand.ExecuteReader();
+            reader.Read();
+            if (reader.HasRows)
+            {
+                //update
+                updateCommand.CommandText = "UPDATE Users SET Currency = '" + currency + "'";
+            }
+            else
+            {
+                //insert
+                updateCommand.CommandText = "INSERT INTO Users (Currency) VALUES ('" + currency + "')";
+            }
+
+            updateCommand.ExecuteNonQuery();
+            connection.Close();
+        }
+
+
 
 
         public int postVantageKey(string key)
@@ -416,8 +452,23 @@ namespace Database //do all the setup and functions for database
             //post key to database
             var connection = new SqliteConnection("Data Source="+databasename);
             connection.Open();
+
+            var selectCommand = connection.CreateCommand();
             var insertCommand = connection.CreateCommand();
-            insertCommand.CommandText = "INSERT INTO APIKeys (AlphavantageKey) VALUES ('" + key + "')";
+            //need to first check if currency is already in database
+            selectCommand.CommandText = "SELECT * FROM Users";
+            var reader = selectCommand.ExecuteReader();
+            reader.Read();
+            if (reader.HasRows)
+            {
+                //update
+                insertCommand.CommandText = "UPDATE Users SET AlphavantageKey = '" + key + "'";
+            }
+            else
+            {
+                //insert
+                insertCommand.CommandText = "INSERT INTO Users (AlphavantageKey) VALUES ('" + key + "')";
+            }
             int status = insertCommand.ExecuteNonQuery();
             connection.Close();
             return status;
@@ -432,7 +483,7 @@ namespace Database //do all the setup and functions for database
                 var connection = new SqliteConnection("Data Source="+databasename);
                 connection.Open();
                 var selectCommand = connection.CreateCommand();
-                selectCommand.CommandText = "SELECT AlphavantageKey FROM APIKeys;";
+                selectCommand.CommandText = "SELECT AlphavantageKey FROM Users;";
                 var reader = selectCommand.ExecuteReader();
                 reader.Read();
                 string key = reader.GetString(0);
@@ -469,6 +520,31 @@ namespace Database //do all the setup and functions for database
             {
                 return true;
             }
+        }
+
+        public string getCurrency()
+        {
+            try
+            {
+                var connection = new SqliteConnection("Data Source="+databasename);
+                connection.Open();
+                var selectCommand = connection.CreateCommand();
+                selectCommand.CommandText = "SELECT Currency FROM Users;";
+                var reader = selectCommand.ExecuteReader();
+                reader.Read();
+                string curr = reader.GetString(0);
+
+                connection.Close();
+                currency = curr;
+                return curr;
+                
+            }
+            catch (Exception)
+            {
+                return "USD";
+                throw;
+            }
+
         }
     }
 
