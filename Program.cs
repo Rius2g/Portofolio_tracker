@@ -289,14 +289,14 @@ namespace ConsoleApplication
             public void UpdateSecurity()
             {
                 Console.Clear();
-                var tickers = new Dictionary<string, int>();
+                var tickers = new Dictionary<int, string>();
                 var securities = db.GetDisplayedSecurities();
 
                 Console.WriteLine("Which security do you want to update? (Enter the number)");
 
                 for(int i = 0; i < securities.Count; i++) //iterate over all securities adding them to the dict with index
                 {
-                    tickers.Add(securities[i].Ticker, i+1);
+                    tickers.Add(i+1, securities[i].Ticker);
                     Console.WriteLine($"{i + 1}. {securities[i].Ticker}"); //display all securities with index
                 }
 
@@ -321,14 +321,14 @@ namespace ConsoleApplication
 
                 if (number < 1 || number > securities.Count)
                 {
-                    Console.WriteLine("Invalid input. Please enter a number between 1 and " + securities.Count);
+                    Console.WriteLine("Invalid input. Please enter a number between 1 and " + securities.Count+1);
                     return;
                 }
                 else
                 {
-                    ticker = securities[number - 1].Ticker;
+                    ticker = tickers[number];
                 }
-                
+
                 Console.WriteLine("What do you want to update?\n 1. Holdings\n 2. Price\n 3. Both");
                 ConsoleKeyInfo key = Console.ReadKey(true);
                 if (char.IsDigit(key.KeyChar))
@@ -479,14 +479,14 @@ namespace ConsoleApplication
                 return;
             }
 
-            public int calculateTotal(List<Modules.DisplayedSecurity> securities)
+            public double calculateTotal(List<Modules.DisplayedSecurity> securities)
             { //calculates the total value of the portofolio
                 double total = 0;
                 for (int i = 0; i < securities.Count; i++)
                 {
-                    total += securities[i].Price * securities[i].Quantity;
+                    total += (double)securities[i].Price * (double)securities[i].Quantity;
                 }
-                return (int)Math.Round(total);
+                return total;
 
             }
 
@@ -497,19 +497,20 @@ namespace ConsoleApplication
                 Console.WriteLine($"\nHoldings displayed in {currencyCode}:\n");
                 Console.WriteLine("{0,-10} {1,-10} {2,-15} {3,-15} {4,-10} {5,-10} {6,-10}", "Ticker", "Quantity", "Price", "Value", "Change", "Percentage", "Average Purchase Price");
 
-                double totalValue = calculateTotal(securities) * priceInCurrency;
+                double totalValue = Math.Round(calculateTotal(securities) * priceInCurrency, 2);
 
                 for (int i = 0; i < securities.Count; i++)
                 {
-                    double value = (double)securities[i].Price * securities[i].Quantity / priceInCurrency;
                     double price = Math.Round((double)securities[i].Price * priceInCurrency, 2);
                     string priceS = string.Format(cultureInfo, "{0:C}", price);
-                    double valueInCurrency = priceInCurrency * (double)securities[i].Quantity * (double)securities[i].Price;
+                    double valueInCurrency = Math.Round(priceInCurrency * (double)securities[i].Quantity * (double)securities[i].Price, 2);
                     string valueS = string.Format(cultureInfo, "{0:# ### ###.00}", valueInCurrency);
                     double percentage = valueInCurrency / totalValue * 100;
+                    Console.WriteLine(valueInCurrency);
+                    Console.WriteLine(totalValue);
                     double change = (double)securities[i].Change;
                     string changeString;
-                    string averagePurchasePrice = string.Format(cultureInfo, "{0:C}", securities[i].avgPurchasePrice);
+                    string averagePurchasePrice = string.Format(cultureInfo, "{0:C}", (double)securities[i].avgPurchasePrice * priceInCurrency);
 
                     // Change the color of the Change and Price columns based on the sign of the change
                     if (change >= 0)
@@ -550,7 +551,7 @@ namespace ConsoleApplication
                 }
             }
 
-            public void DisplayAllocations(List<Modules.DisplayedSecurity> securities, int total)
+            public void DisplayAllocations(List<Modules.DisplayedSecurity> securities, double total)
             {
                 Dictionary<int, int> allocation = new Dictionary<int, int>();
 
@@ -633,7 +634,7 @@ namespace ConsoleApplication
                 return total;
             }
 
-            public double averageChange(int total, double averageTotal)
+            public double averageChange(double total, double averageTotal)
             {
                 return Math.Round((total - averageTotal) / averageTotal * 100, 2);
             }
@@ -652,7 +653,6 @@ namespace ConsoleApplication
                 if (API_Key == "error")
                 {   
                     Console.Clear();
-                    Console.WriteLine("3");
                     Console.WriteLine("No Vantage API key found. Please add one in the settings.");
                     Console.WriteLine("Press any key to continue to main menu...");
                     while(true){
@@ -681,7 +681,7 @@ namespace ConsoleApplication
 
                     // Get the updated securities and total value
                     List<Modules.DisplayedSecurity> securities = db.GetDisplayedSecurities();
-                    int totalValue = calculateTotal(securities);
+                    double totalValue = calculateTotal(securities);
 
                     // Convert the total value to the selected currency
                     double totalValueInCurrency = totalValue * currencyRate;
