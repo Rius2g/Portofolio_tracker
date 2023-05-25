@@ -289,13 +289,46 @@ namespace ConsoleApplication
             public void UpdateSecurity()
             {
                 Console.Clear();
-                Console.WriteLine("Update security: Enter ticker");
-                string? ticker = Console.ReadLine();
-                if(string.IsNullOrEmpty(ticker))
+                var tickers = new Dictionary<string, int>();
+                var securities = db.GetDisplayedSecurities();
+
+                Console.WriteLine("Which security do you want to update? (Enter the number)");
+
+                for(int i = 0; i < securities.Count; i++) //iterate over all securities adding them to the dict with index
                 {
-                    Console.WriteLine("Invalid ticker. Please enter a valid ticker.");
+                    tickers.Add(securities[i].Ticker, i+1);
+                    Console.WriteLine($"{i + 1}. {securities[i].Ticker}"); //display all securities with index
+                }
+
+
+                //display all securities with index here
+
+                ConsoleKeyInfo key1 = Console.ReadKey(true);
+
+                string? ticker;
+                int number;
+
+                // Check value of the key
+                if (char.IsDigit(key1.KeyChar))
+                {
+                    number = int.Parse(key1.KeyChar.ToString());
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input. Please enter a number.");
                     return;
                 }
+
+                if (number < 1 || number > securities.Count)
+                {
+                    Console.WriteLine("Invalid input. Please enter a number between 1 and " + securities.Count);
+                    return;
+                }
+                else
+                {
+                    ticker = securities[number - 1].Ticker;
+                }
+                
                 Console.WriteLine("What do you want to update?\n 1. Holdings\n 2. Price\n 3. Both");
                 ConsoleKeyInfo key = Console.ReadKey(true);
                 if (char.IsDigit(key.KeyChar))
