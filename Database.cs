@@ -405,7 +405,6 @@ namespace Database //do all the setup and functions for database
                     //do a call here to get the price and change
                     Modules.DisplayedSecurity security = new Modules.DisplayedSecurity(reader.GetString(0), reader.GetFloat(1),quant , reader.GetInt16(3), reader.GetDouble(4), reader.GetBoolean(5));
                     security.PurchasePrice = reader.GetFloat(6);
-                    Console.WriteLine(security);
                     securities.Add(security);
                 }
                 List<string> tickers = new List<string>();
