@@ -405,7 +405,14 @@ namespace ConsoleApplication
 
                     case 2:
                         Console.Clear();
-                        Console.WriteLine("Not implemented yet.");
+                        Console.WriteLine("Enter your desired currency:");
+                        string ? currency = Console.ReadLine();
+                        if(string.IsNullOrEmpty(currency))
+                        {
+                            Console.WriteLine("Invalid currency. Please enter a valid currency.");
+                            return;
+                        }
+                        db.postCurrency(currency);
                         Settings();
                         return;
                     
@@ -613,8 +620,7 @@ namespace ConsoleApplication
                 refreshTimer.Start();
                 Console.Clear();
                 // Get the display currency from user input
-                Console.WriteLine("Enter the currency you would like to display the portfolio in: ");
-                string? currencyCode = Console.ReadLine();
+                string? currencyCode = db.getCurrency();
                 string API_Key = db.GetVantageKey();
                 if (API_Key == "error")
                 {   
