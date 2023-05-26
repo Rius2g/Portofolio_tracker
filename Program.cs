@@ -83,6 +83,7 @@ namespace ConsoleApplication
                 Console.Clear();
                 Console.WriteLine("Enter the type of security you want to add\n 1. Crypto\n 2. Stock\n 3. ETF\n 4. Mutual Fund\n 5. Index Fund\n 6. By ISI\n 7. Manual input\n 8. Savings account\n 9. Abort");
                 ConsoleKeyInfo key = Console.ReadKey(true);
+                Console.Clear();
 
                 // Check if the key was Enter
                 int type = 0;
@@ -513,8 +514,6 @@ namespace ConsoleApplication
                     double valueInCurrency = Math.Round(priceInCurrency * (double)securities[i].Quantity * (double)securities[i].Price, 2);
                     string valueS = string.Format(cultureInfo, "{0:# ### ###.00}", valueInCurrency);
                     double percentage = valueInCurrency / totalValue * 100;
-                    Console.WriteLine(valueInCurrency);
-                    Console.WriteLine(totalValue);
                     double change = (double)securities[i].Change;
                     string changeString;
                     string averagePurchasePrice = string.Format(cultureInfo, "{0:C}", (double)securities[i].avgPurchasePrice * priceInCurrency);

@@ -198,9 +198,59 @@ namespace Database //do all the setup and functions for database
             connection.Open();
 
             // Update some data:
-            var updateCommand = connection.CreateCommand();
-            updateCommand.CommandText = "UPDATE Securities SET Quantity = '" + newHoldings + "' WHERE Ticker = '" + ticker + "'";
-            updateCommand.ExecuteNonQuery();
+            var selectCommand = connection.CreateCommand();
+            selectCommand.CommandText = "SELECT * FROM Securities WHERE Ticker = '" + ticker + "'";
+            int count = 0;
+
+            List<Modules.DisplayedSecurity> securities = new List<Modules.DisplayedSecurity>();
+            using (var reader = selectCommand.ExecuteReader())
+            {
+                count++;
+                double quant;
+                bool parsed;
+                while (reader.Read())
+                {
+                    parsed = double.TryParse(reader.GetString(2).Replace(".",","),out quant);
+                    if(parsed == false)
+                    {
+                        Console.WriteLine("Error parsing quantity of " + reader.GetString(0) + " to double. Setting quantity to 0.");
+                        quant = 0;
+                        while(true){
+                            if(Console.ReadKey(true).Key != ConsoleKey.NoName){
+                                break;
+                            }
+                        }
+                    }
+                    //do a call here to get the price and change
+                    Modules.DisplayedSecurity security = new Modules.DisplayedSecurity(reader.GetString(0), reader.GetFloat(1),quant , reader.GetInt16(3), reader.GetDouble(4), reader.GetBoolean(5));
+                    security.PurchasePrice = reader.GetFloat(6);
+                    securities.Add(security);
+                }
+            }
+            Modules.DisplayedSecurity security1 = new Modules.DisplayedSecurity(ticker, 0, 0, 0, 0, false);
+
+            if(count > 1)
+            {
+                //we have more than one entry for this ticker
+                //we need to combine them
+                foreach(Modules.DisplayedSecurity security in securities)
+                {
+                    security1.Quantity += newHoldings;
+                    security1.PurchasePrice += security.PurchasePrice;
+                }
+                security1.PurchasePrice /= securities.Count;
+            }
+            else
+            {
+                security1 = securities[0];
+            }
+
+            var deleteCommand = connection.CreateCommand();
+            deleteCommand.CommandText = "DELETE FROM Securities WHERE Ticker = '" + ticker + "'";
+            deleteCommand.ExecuteNonQuery();
+            
+            Modules.Security security2 = new Modules.Security(security1.Ticker, security1.Quantity, security1.Type);
+            AddSecurity(security2);
 
             // Close the connection:
             connection.Close();
@@ -407,23 +457,38 @@ namespace Database //do all the setup and functions for database
                     security.PurchasePrice = reader.GetFloat(6);
                     securities.Add(security);
                 }
+
+
                 List<string> tickers = new List<string>();
+                List<Modules.DisplayedSecurity> returnedSecurities = new List<Modules.DisplayedSecurity>();
                 foreach (Modules.DisplayedSecurity security in securities)
                 {
                     if(tickers.Contains(security.Ticker) == false)
                     {
                         tickers.Add(security.Ticker);
                         security.avgPurchasePrice = calculateAveagePurchasePrice(securities, security.Ticker);
-                    }
-                    else
-                    {
-                        securities.Remove(security); //already fixed the avg price
+                        //also need to add the holdings together
+                        security.Quantity = calculateTotalQuantity(securities, security.Ticker);
+                        returnedSecurities.Add(security);
                     }
                 }
 
                 //get the avg price of the securities, create a list with the tickers that have been added so no dupliactes no more
-                return securities;
+                return returnedSecurities;
             }
+        }
+
+        public double calculateTotalQuantity(List<Modules.DisplayedSecurity> securities, string ticker)
+        {
+            double totalQuantity = 0;
+            for(int i = 0; i < securities.Count; i++)
+            {
+                if(securities[i].Ticker == ticker)
+                {
+                    totalQuantity += securities[i].Quantity;
+                }
+            }
+            return totalQuantity;
         }
 
         public double calculateAveagePurchasePrice(List<Modules.DisplayedSecurity> securities, string ticker)
