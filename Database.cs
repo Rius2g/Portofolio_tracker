@@ -199,7 +199,7 @@ namespace Database //do all the setup and functions for database
 
             // Update some data:
             var selectCommand = connection.CreateCommand();
-            selectCommand.CommandText = "SELECT * FROM Securities WHERE Ticker = '" + ticker + "'";
+            selectCommand.CommandText = "SELECT Ticker, Price, Quantity, Type, Change, ManualInput, PurchasePrice FROM Securities WHERE Ticker = '" + ticker + "'";
             int count = 0;
 
             List<Modules.DisplayedSecurity> securities = new List<Modules.DisplayedSecurity>();
@@ -227,22 +227,22 @@ namespace Database //do all the setup and functions for database
                     securities.Add(security);
                 }
             }
-            Modules.DisplayedSecurity security1 = new Modules.DisplayedSecurity(ticker, 0, 0, 0, 0, false);
+            Modules.Security security1;
 
             if(count > 1)
             {
                 //we have more than one entry for this ticker
                 //we need to combine them
+                security1 = new Modules.Security(securities[0].Ticker, 0, securities[0].Type);
                 foreach(Modules.DisplayedSecurity security in securities)
                 {
-                    security1.Quantity += newHoldings;
-                    security1.PurchasePrice += security.PurchasePrice;
+                    security1.Quantity = newHoldings;
                 }
-                security1.PurchasePrice /= securities.Count;
             }
             else
             {
-                security1 = securities[0];
+                security1 = new Modules.Security(securities[0].Ticker, securities[0].Quantity, securities[0].Type);
+                security1.Quantity = newHoldings;
             }
 
             var deleteCommand = connection.CreateCommand();
