@@ -39,7 +39,8 @@ namespace Database //do all the setup and functions for database
 
                                                     CREATE TABLE IF NOT EXISTS Users (
                                                     AlphavantageKey TEXT,
-                                                    Currency TEXT
+                                                    Currency TEXT,
+                                                    Goal REAL
                                                     );
                                                 ";
                 createTableCommand.ExecuteNonQuery();
@@ -656,6 +657,61 @@ namespace Database //do all the setup and functions for database
                 throw;
             }
 
+        }
+
+        public double getGoal()
+        {
+            try
+            {
+                var connection = new SqliteConnection("Data Source="+databasename);
+                connection.Open();
+                var selectCommand = connection.CreateCommand();
+                selectCommand.CommandText = "SELECT Goal FROM Users;";
+                var reader = selectCommand.ExecuteReader();
+                reader.Read();
+                double goal = reader.GetDouble(0);
+
+                connection.Close();
+                return goal;
+                
+            }
+            catch (Exception)
+            {
+                return 0;
+                throw;
+            }
+        }
+
+        public void postGoal(double goal)
+        {
+            var connectionStringBuilder = new SqliteConnectionStringBuilder();
+            connectionStringBuilder.DataSource = databasename;
+            var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
+
+            // Open the connection:
+            connection.Open();
+
+            // Update some data:
+            var selectCommand = connection.CreateCommand();
+            var updateCommand = connection.CreateCommand();
+
+            //need to first check if currency is already in database
+            selectCommand.CommandText = "SELECT * FROM Users";
+            var reader = selectCommand.ExecuteReader();
+            reader.Read();
+            if (reader.HasRows)
+            {
+                //update
+                updateCommand.CommandText = "UPDATE Users SET Goal = '" + goal + "'";
+            }
+            else
+            {
+                //insert
+                updateCommand.CommandText = "INSERT INTO Users (Goal) VALUES ('" + goal + "')";
+            }
+
+            updateCommand.ExecuteNonQuery();
+            connection.Close();
         }
     }
 

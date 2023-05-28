@@ -412,8 +412,9 @@ namespace ConsoleApplication
                 Console.WriteLine("Settings");
                 Console.WriteLine("1. Change API key");
                 Console.WriteLine("2. Change currency");
-                Console.WriteLine("3. Purge database");
-                Console.WriteLine("4. Back");
+                Console.WriteLine("3. Add Goal");
+                Console.WriteLine("4. Purge database");
+                Console.WriteLine("5. Back");
 
                 int type = 0;
                 ConsoleKeyInfo key = Console.ReadKey(true);
@@ -449,14 +450,26 @@ namespace ConsoleApplication
                         db.postCurrency(currency);
                         Settings();
                         return;
-                    
                     case 3:
+                        Console.Clear();
+                        Console.WriteLine("Enter your desired goal:");
+                        double goal;
+                        if (!double.TryParse(Console.ReadLine(), out goal))
+                        {
+                            Console.WriteLine("Invalid goal. Please enter a valid number.");
+                            return;
+                        }
+                        db.postGoal(goal);
+                        Settings();
+                        return;
+                    
+                    case 4:
                         PurgeDatabase();
                         Settings();
                         return;
 
                     
-                    case 4:
+                    case 5:
                         Console.Clear();
                         Console.WriteLine("Going back");
                         return;
@@ -646,6 +659,11 @@ namespace ConsoleApplication
             }
 
 
+            public double remainingToGoal(double total, double goal)
+            {
+                return Math.Round(goal - total, 2);
+            }
+
             public async Task DisplayPortfolio()
             {
                 const int RefreshIntervalMinutes = 15;
@@ -687,9 +705,11 @@ namespace ConsoleApplication
                     // Get the updated securities and total value
                     List<Modules.DisplayedSecurity> securities = db.GetDisplayedSecurities();
                     double totalValue = calculateTotal(securities);
+                    double goal = db.getGoal();
 
                     // Convert the total value to the selected currency
                     double totalValueInCurrency = totalValue * currencyRate;
+                    double remaining = remainingToGoal(totalValueInCurrency, goal);
 
                     double change = calculateChange_percent(securities);
                     double priceChange = Convert.ToDouble(calculateChange_price(securities)) * Convert.ToDouble(currencyRate);
@@ -700,6 +720,7 @@ namespace ConsoleApplication
                     Console.WriteLine($"Total portfolio value: {currencyCode} {totalValueInCurrency.ToString("N2")}");
                     Console.WriteLine($"24H Change: {change}% {currencyCode} {Math.Abs(priceChange):0.00}");
                     Console.WriteLine($"Change from average buy price: {avgChange}% "); //displays change from average price
+                    Console.WriteLine($"Remaining to goal: {currencyCode} {remaining.ToString("N2")}");
 
                     Console.ResetColor();
 
