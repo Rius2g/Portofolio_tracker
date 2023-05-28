@@ -666,7 +666,7 @@ namespace ConsoleApplication
 
             public async Task DisplayPortfolio()
             {
-                const int RefreshIntervalMinutes = 15;
+                const int RefreshIntervalMinutes = 1;
                 Stopwatch refreshTimer = new Stopwatch();
                 refreshTimer.Start();
                 Console.Clear();
@@ -689,59 +689,66 @@ namespace ConsoleApplication
                 double currencyRate = await get.GetCurrencyExchangeRate("USD", currencyCode, API_Key);
                 db.updatePrices(); 
                 Console.WriteLine("Updating data...");
-                Thread.Sleep(3000);
+                Thread.Sleep(2000);
+                int init = 0;
 
                 while (true)
                 {
                     // Check if it's time to refresh the prices
-                    if (refreshTimer.Elapsed.TotalMinutes >= RefreshIntervalMinutes)
+                    if (refreshTimer.Elapsed.TotalMinutes >= RefreshIntervalMinutes || init == 0)
                     {
                         db.updatePrices();
                         refreshTimer.Restart();
+                        init = 1;
+
+                         Console.Clear();
+                        // Get the updated securities and total value
+                        List<Modules.DisplayedSecurity> securities = db.GetDisplayedSecurities();
+                        double totalValue = calculateTotal(securities);
+                        double goal = db.getGoal();
+
+                        // Convert the total value to the selected currency
+                        double totalValueInCurrency = totalValue * currencyRate;
+                        double remaining = remainingToGoal(totalValueInCurrency, goal);
+
+                        double change = calculateChange_percent(securities);
+                        double priceChange = Convert.ToDouble(calculateChange_price(securities)) * Convert.ToDouble(currencyRate);
+                        Console.ForegroundColor = (change >= 0) ? ConsoleColor.Green : ConsoleColor.Red;
+                        double avgTotal = averageTotal(securities);
+                        double avgChange = averageChange(totalValue, avgTotal);
+                        // Display the portfolio information
+                        Console.WriteLine($"Total portfolio value: {currencyCode} {totalValueInCurrency.ToString("N2")}");
+                        Console.WriteLine($"24H Change: {change}% {currencyCode} {Math.Abs(priceChange):0.00}");
+                        Console.WriteLine($"Change from average buy price: {avgChange}% "); //displays change from average price
+                        Console.WriteLine($"Remaining to goal: {currencyCode} {remaining.ToString("N2")}");
+
+                        Console.ResetColor();
+
+                        Console.WriteLine("Displaying portfolio");
+                        DisplayAllocations(securities, totalValue);
+                        listAllHoldings(securities, currencyRate, currencyCode);
+                        Console.SetCursorPosition(Console.WindowWidth - 6, Console.WindowHeight - 1);
+
+                        // Print the "EXIT" message
+                        Console.Write("(EXIT)");
                     }
-
-                    Console.Clear();
-
-                    // Get the updated securities and total value
-                    List<Modules.DisplayedSecurity> securities = db.GetDisplayedSecurities();
-                    double totalValue = calculateTotal(securities);
-                    double goal = db.getGoal();
-
-                    // Convert the total value to the selected currency
-                    double totalValueInCurrency = totalValue * currencyRate;
-                    double remaining = remainingToGoal(totalValueInCurrency, goal);
-
-                    double change = calculateChange_percent(securities);
-                    double priceChange = Convert.ToDouble(calculateChange_price(securities)) * Convert.ToDouble(currencyRate);
-                    Console.ForegroundColor = (change >= 0) ? ConsoleColor.Green : ConsoleColor.Red;
-                    double avgTotal = averageTotal(securities);
-                    double avgChange = averageChange(totalValue, avgTotal);
-                    // Display the portfolio information
-                    Console.WriteLine($"Total portfolio value: {currencyCode} {totalValueInCurrency.ToString("N2")}");
-                    Console.WriteLine($"24H Change: {change}% {currencyCode} {Math.Abs(priceChange):0.00}");
-                    Console.WriteLine($"Change from average buy price: {avgChange}% "); //displays change from average price
-                    Console.WriteLine($"Remaining to goal: {currencyCode} {remaining.ToString("N2")}");
-
-                    Console.ResetColor();
-
-                    Console.WriteLine("Displaying portfolio");
-                    DisplayAllocations(securities, totalValue);
-                    listAllHoldings(securities, currencyRate, currencyCode);
-                    Console.SetCursorPosition(Console.WindowWidth - 6, Console.WindowHeight - 1);
-
-                    // Print the "EXIT" message
-                    Console.Write("(EXIT)");
-
-                    // Wait for a key to be pressed
-                    ConsoleKeyInfo key = Console.ReadKey(true);
-
-                    // Check if the key is intended for the DisplayPortfolio function
-                    if (key.Key == ConsoleKey.Escape || key.Key == ConsoleKey.X || key.Key  == ConsoleKey.Enter)
+                    else
                     {
-                        Console.WriteLine("HEIA");
-                        // Exit the DisplayPortfolio function
-                        Console.WriteLine("Exiting display portfolio view");
-                        break;
+                        if(Console.KeyAvailable)
+                        {
+                        // Wait for a key to be pressed
+                        ConsoleKeyInfo key = Console.ReadKey(true);
+
+                        // Check if the key is intended for the DisplayPortfolio function
+                        if (key.Key == ConsoleKey.Escape || key.Key == ConsoleKey.X || key.Key  == ConsoleKey.Enter)
+                        {
+                            Console.WriteLine("HEIA");
+                            // Exit the DisplayPortfolio function
+                            Console.WriteLine("Exiting display portfolio view");
+                            break;
+                        }
+
+                    }
                     }
                 }
             }
