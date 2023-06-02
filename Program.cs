@@ -525,7 +525,7 @@ namespace ConsoleApplication
                     double price = Math.Round((double)securities[i].Price * priceInCurrency, 2);
                     string priceS = string.Format(cultureInfo, "{0:C}", price);
                     double valueInCurrency = Math.Round(priceInCurrency * (double)securities[i].Quantity * (double)securities[i].Price, 2);
-                    string valueS = string.Format(cultureInfo, "{0:# ### ###.00}", valueInCurrency);
+                    string valueS = string.Format(cultureInfo, "{0:N2}", valueInCurrency);
                     double percentage = valueInCurrency / totalValue * 100;
                     double change = (double)securities[i].Change;
                     string changeString;

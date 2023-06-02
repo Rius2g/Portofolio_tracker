@@ -467,9 +467,10 @@ namespace Database //do all the setup and functions for database
                     if(tickers.Contains(security.Ticker) == false)
                     {
                         tickers.Add(security.Ticker);
-                        security.avgPurchasePrice = calculateAveagePurchasePrice(securities, security.Ticker);
+                        Tuple<double, double> avgPriceAndQuantity = calculateAveagePurchasePrice(securities, security.Ticker);
+                        security.avgPurchasePrice = avgPriceAndQuantity.Item1;
                         //also need to add the holdings together
-                        security.Quantity = calculateTotalQuantity(securities, security.Ticker);
+                        security.Quantity = avgPriceAndQuantity.Item2;
                         returnedSecurities.Add(security);
                     }
                 }
@@ -478,29 +479,17 @@ namespace Database //do all the setup and functions for database
                 return returnedSecurities;
             }
         }
-
-        public double calculateTotalQuantity(List<Modules.DisplayedSecurity> securities, string ticker)
-        {
-            double totalQuantity = 0;
-            for(int i = 0; i < securities.Count; i++)
-            {
-                if(securities[i].Ticker == ticker)
-                {
-                    totalQuantity += securities[i].Quantity;
-                }
-            }
-            return totalQuantity;
-        }
-
-        public double calculateAveagePurchasePrice(List<Modules.DisplayedSecurity> securities, string ticker)
+        public Tuple<double, double> calculateAveagePurchasePrice(List<Modules.DisplayedSecurity> securities, string ticker)
             {
                 double totalCost = 0;
                 double avgPurchasePrice = 0;
+                double totalQuantity = 0;
                 for(int i = 0; i < securities.Count; i++)
                 {
                     if(securities[i].Ticker == ticker)
                     {
                         totalCost += securities[i].PurchasePrice * securities[i].Quantity; //total price for that security
+                        totalQuantity += securities[i].Quantity;
                     }
                 }
                 //create a list for it here
@@ -513,7 +502,7 @@ namespace Database //do all the setup and functions for database
                         avgPurchasePrice += purchasePercent * securities[j].PurchasePrice;
                     }
                 }
-                return avgPurchasePrice; //returns the average price
+                return Tuple.Create(avgPurchasePrice, totalQuantity); //returns the average price
             }
 
         public void updatePrices()
