@@ -110,6 +110,8 @@ namespace Database //do all the setup and functions for database
             // Convert the price to a string, and replace the comma with a period:
             string priceString = price.ToString("0.00", CultureInfo.InvariantCulture).Replace(',', '.');
 
+            string purchasePriceString = priceString;
+
             // Open the connection:
             connection.Open();
 
@@ -117,7 +119,7 @@ namespace Database //do all the setup and functions for database
             insertCommand.CommandText = @"INSERT INTO Securities 
                               (Ticker, Name, Price, Quantity, Change, Date, Time, Type, PurchasePrice, ManualInput) 
                               VALUES 
-                              ('" + security.Ticker + "', '" + name + "', '" + priceString + "', '" + security.Quantity + "', '" + changeString + "', '" + date.ToString("yyyy-MM-dd") + "', '" + time.ToString("HH:mm") + "', '" + security.Type + "', '" + priceString + "', 0)";
+                              ('" + security.Ticker + "', '" + name + "', '" + priceString + "', '" + security.Quantity + "', '" + changeString + "', '" + date.ToString("yyyy-MM-dd") + "', '" + time.ToString("HH:mm") + "', '" + security.Type + "', '" + purchasePriceString + "', 0)";
 
             var success =  insertCommand.ExecuteNonQuery();
             if (success < 1)
@@ -261,42 +263,39 @@ namespace Database //do all the setup and functions for database
         {
             double price = 0;
             double change = 0;
-            if (security.Type == 1) //crypto
+            int type = security.Type;
+            switch(type)
             {
-                var result = await api.GetCryptoPriceAndPercentChange(security.Ticker);
-                price = result.Item2;
-                change = result.Item3;
+                case 1:
+                    var result = await api.GetCryptoPriceAndPercentChange(security.Ticker);
+                    price = result.Item2;
+                    change = result.Item3;
+                    break;
+                case 2: //case for 2 AND 3
+                case 3:
+                    if (CheckVantageKey() == false)
+                    {
+                        return;
+                    }
+                    var result2 = await api.GetStockPriceAndPercentChange(security.Ticker, API_KEY);
+                    price = result2.Item2;
+                    change = result2.Item3;
+                    break;
+                case 5:
+                    var result4 = await api.GetMutualFundPrice(security.Ticker);
+                    price = result4.Item2;
+                    change = result4.Item3;
+                    break;
+                case 6:
+                    if (CheckVantageKey() == false)
+                    {
+                        return;
+                    }
+                    var result3 = await api.GetStockPriceAndPercentChangeByISIN(security.Ticker, API_KEY);
+                    price = result3.Item2;
+                    change = result3.Item3;
+                    break;
             }
-            else if (security.Type == 2 || security.Type == 3) //stock, etf, index fund
-            {
-                if (CheckVantageKey() == false)
-                {
-                    return;
-                }
-                var result = await api.GetStockPriceAndPercentChange(security.Ticker, API_KEY);
-                price = result.Item2;
-                change = result.Item3;
-            }
-            else if (security.Type == 5) //mutual fund
-            {
-                var result = await api.GetMutualFundPrice(security.Ticker);
-                price = result.Item2;
-                change = result.Item3;
-            }
-
-            else if (security.Type == 6) //by ISIN
-            {
-                if (CheckVantageKey() == false)
-                {
-                    return;
-                }
-                var result = await api.GetStockPriceAndPercentChangeByISIN(security.Ticker, API_KEY);
-                price = result.Item2;
-                change = result.Item3;
-                string type = result.Item4;
-                security.Type = typeToInt(result.Item4);
-            }
-
             string priceString = price.ToString("0.00", CultureInfo.InvariantCulture).Replace(',', '.');
             string changeString = change.ToString("0.00", CultureInfo.InvariantCulture).Replace(',', '.');
 
@@ -371,29 +370,22 @@ namespace Database //do all the setup and functions for database
 
         public int typeToInt(string type)
         {
-            if (type == "stock")
+            switch(type)
             {
-                return 2;
-            }
-            else if (type == "crypto")
-            {
-                return 1;
-            }
-            else if (type == "etf")
-            {
-                return 3;
-            }
-            else if (type == "index fund")
-            {
-                return 4;
-            }
-            else if (type == "mutual fund" || type == "Equity - Other")
-            {
-                return 5;
-            }
-            else
-            {
-                return 0;
+                case "stock":
+                    return 2;
+                case "crypto":
+                    return 1;
+                case "etf":
+                    return 3;
+                case "index fund":
+                    return 4;
+                case "mutual fund":
+                    return 5;
+                case "Equity - Other":
+                    return 5;
+                default:
+                    return 0;
             }
         }
 
