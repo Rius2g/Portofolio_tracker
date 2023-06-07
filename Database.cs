@@ -296,12 +296,13 @@ namespace Database //do all the setup and functions for database
                     change = result3.Item3;
                     break;
             }
+
             string priceString = price.ToString("0.00", CultureInfo.InvariantCulture).Replace(',', '.');
             string changeString = change.ToString("0.00", CultureInfo.InvariantCulture).Replace(',', '.');
 
             // Create a new database connection:
             var connectionStringBuilder = new SqliteConnectionStringBuilder();
-            connectionStringBuilder.DataSource = "Holdings.db";
+            connectionStringBuilder.DataSource = databasename;
             var connection = new SqliteConnection(connectionStringBuilder.ConnectionString);
 
             // Open the connection:
@@ -313,9 +314,10 @@ namespace Database //do all the setup and functions for database
             var updateCommand = connection.CreateCommand();
             updateCommand.CommandText = "UPDATE Securities SET Price = '" + priceString + "', Change = '" + changeString + "', Date = '" + date.ToString("yyyy-MM-dd") + "', Time = '" + time.ToString("HH:mm") + "' WHERE Ticker = '" + security.Ticker + "'";
             updateCommand.ExecuteNonQuery();
-
+            
             // Close the connection:
             connection.Close();
+
         }
 
         public void AddSavingsAccount(Modules.Security security)
@@ -341,7 +343,7 @@ namespace Database //do all the setup and functions for database
         {
             foreach (Modules.DisplayedSecurity security in securities)
             {
-                if (security.ManualInput == true) //not manual input
+                if (security.ManualInput == false) //not manual input
                 {
                     UpdateSecurity(security);
                 }
