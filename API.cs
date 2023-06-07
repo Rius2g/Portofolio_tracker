@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using System.Globalization;
 using System.Web;
+using System.Net.Http.Headers;
 
 
 namespace API 
@@ -161,6 +162,33 @@ namespace API
             }
 
         }
+
+        public async Task<Tuple<string, int>> FearAndGreedIndex()
+        {
+            var client = new HttpClient();
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Get,
+                RequestUri = new Uri("https://fear-and-greed-index.p.rapidapi.com/v1/fgi"),
+                Headers =
+                {
+                    { "X-RapidAPI-Key", "405e2016a0msh53b97456b071946p19b73fjsn2a954e1223fc" },
+		            { "X-RapidAPI-Host", "fear-and-greed-index.p.rapidapi.com" },
+                },
+            };
+            using (var response = await client.SendAsync(request))
+            {
+                response.EnsureSuccessStatusCode();
+                var body = await response.Content.ReadAsStringAsync();
+                var json = JObject.Parse(body);
+
+                int fgiValue = (int)json["fgi"]["now"]["value"];
+                string fgiValueText = (string)json["fgi"]["now"]["valueText"];
+                return Tuple.Create($"Fear and Greed Index: Value: {fgiValue}/100, Sentiment: {fgiValueText}", fgiValue);
+            }
+        }
+
+
     }
 
 }
