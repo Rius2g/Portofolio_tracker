@@ -335,55 +335,52 @@ namespace ConsoleApplication
                 if (char.IsDigit(key.KeyChar))
                 {
                     int option = int.Parse(key.KeyChar.ToString());
-                    if(option == 1)
+                    switch(option)
                     {
-                        Console.Clear();
-                        Console.WriteLine("Enter the new holdings:");
-                        int holdings;
-                        if (!int.TryParse(Console.ReadLine(), out holdings))
-                        {
-                            Console.WriteLine("Invalid holdings. Please enter a valid number.");
+                        case 1:
+                            Console.Clear();
+                            Console.WriteLine("Enter the new holdings:");
+                            int holdings;
+                            if (!int.TryParse(Console.ReadLine(), out holdings))
+                            {
+                                Console.WriteLine("Invalid holdings. Please enter a valid number.");
+                                return;
+                            }
+                            db.UpdateHoldings(ticker, holdings);
+                            break;
+                        case 2:
+                            Console.Clear();
+                            Console.WriteLine("Enter the new price:");
+                            decimal price;
+                            if (!decimal.TryParse(Console.ReadLine(), out price))
+                            {
+                                Console.WriteLine("Invalid price. Please enter a valid number.");
+                                return;
+                            }
+                            db.UpdatePrice(ticker, price);
                             return;
-                        }
-                        db.UpdateHoldings(ticker, holdings);
-                    }
-                    else if(option == 2)
-                    {
-                        Console.Clear();
-                        Console.WriteLine("Enter the new price:");
-                        decimal price;
-                        if (!decimal.TryParse(Console.ReadLine(), out price))
-                        {
-                            Console.WriteLine("Invalid price. Please enter a valid number.");
+                        case 3:
+                            Console.Clear();
+                            Console.WriteLine("Enter the new holdings:");
+                            int holdings2;
+                            if (!int.TryParse(Console.ReadLine(), out holdings2))
+                            {
+                                Console.WriteLine("Invalid holdings. Please enter a valid number.");
+                                return;
+                            }
+                            Console.WriteLine("Enter the new price:");
+                            decimal price2;
+                            if (!decimal.TryParse(Console.ReadLine(), out price2))
+                            {
+                                Console.WriteLine("Invalid price. Please enter a valid number.");
+                                return;
+                            }
+                            db.UpdateHoldings(ticker, holdings2);
+                            db.UpdatePrice(ticker, price2);
                             return;
-                        }
-                        db.UpdatePrice(ticker, price);
-                    }
-                    else if(option == 3)
-                    {
-                        Console.Clear();
-                        Console.WriteLine("Enter the new holdings:");
-                        int holdings;
-                        if (!int.TryParse(Console.ReadLine(), out holdings))
-                        {
-                            Console.WriteLine("Invalid holdings. Please enter a valid number.");
+                        default:
+                            Console.WriteLine("Invalid input. Please enter a number between 1 and 3.");
                             return;
-                        }
-                        Console.WriteLine("Enter the new price:");
-                        decimal price;
-                        if (!decimal.TryParse(Console.ReadLine(), out price))
-                        {
-                            Console.WriteLine("Invalid price. Please enter a valid number.");
-                            return;
-                        }
-                        db.UpdateHoldings(ticker, holdings);
-                        db.UpdatePrice(ticker, price);
-                        return;
-                    }
-                    else
-                    {
-                        Console.WriteLine("Invalid input. Please enter a number between 1 and 3.");
-                        return;
                     }
                 }
             }
@@ -670,6 +667,8 @@ namespace ConsoleApplication
                 Stopwatch refreshTimer = new Stopwatch();
                 refreshTimer.Start();
                 Console.Clear();
+                Tuple<string, int>fearAndGreedIndex = await get.FearAndGreedIndex();
+
                 // Get the display currency from user input
                 string? currencyCode = db.getCurrency();
                 string API_Key = db.GetVantageKey();
@@ -721,6 +720,8 @@ namespace ConsoleApplication
                         Console.WriteLine($"24H Change: {change}% {currencyCode} {Math.Abs(priceChange):0.00}");
                         Console.WriteLine($"Change from average buy price: {avgChange}% "); //displays change from average price
                         Console.WriteLine($"Remaining to goal: {currencyCode} {remaining.ToString("N2")}");
+                        Console.ForegroundColor = (fearAndGreedIndex.Item2 >= 50) ? ConsoleColor.Red : ConsoleColor.Green;
+                        Console.WriteLine(fearAndGreedIndex.Item1); //displays fear and greed index
 
                         Console.ResetColor();
 
