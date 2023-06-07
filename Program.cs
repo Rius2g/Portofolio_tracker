@@ -743,7 +743,6 @@ namespace ConsoleApplication
                         // Check if the key is intended for the DisplayPortfolio function
                         if (key.Key == ConsoleKey.Escape || key.Key == ConsoleKey.X || key.Key  == ConsoleKey.Enter)
                         {
-                            Console.WriteLine("HEIA");
                             // Exit the DisplayPortfolio function
                             Console.WriteLine("Exiting display portfolio view");
                             break;
